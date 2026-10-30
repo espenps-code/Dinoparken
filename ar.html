@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Dinokort AR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{ --ink:#1f3b2c; --card:#fffdf6; --orange:#f2a33a; }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;background:#1d2a22;color:var(--ink);font-family:'Atkinson Hyperlegible',system-ui,sans-serif;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+  #ar{position:fixed;inset:0;overflow:hidden}
+  #ar video{object-fit:cover}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:3px solid var(--ink);border-radius:18px;padding:12px 20px;font:600 19px Fredoka,sans-serif;cursor:pointer;color:var(--ink);background:#fff;box-shadow:0 4px 0 rgba(31,59,44,.25)}
+  .btn:active{transform:translateY(2px);box-shadow:0 2px 0 rgba(31,59,44,.25)}
+  .btn.go{background:var(--orange)}
+  /* Startskjerm */
+  #start{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:20px;
+    background:radial-gradient(ellipse at 50% 20%,#ffffff 0%,#cdeefa 55%,#b9e2f2 100%)}
+  #start[hidden]{display:none}
+  .startCard{background:var(--card);border:3px solid var(--ink);border-radius:26px;padding:26px 24px;max-width:460px;width:100%;text-align:center;box-shadow:0 8px 0 rgba(31,59,44,.2)}
+  .startCard h1{font:700 34px Fredoka,sans-serif;margin:6px 0 6px}
+  .startCard p{font-size:18px;line-height:1.45;margin:0 0 14px}
+  .startCard .small{font-size:14px;color:#4a6656;margin:14px 0 0}
+  .startCard a{color:#2f6b3a;font:600 15px Fredoka,sans-serif}
+  .demo{width:150px;height:110px;margin:4px auto 8px;position:relative}
+  .demo .c{position:absolute;left:35px;top:30px;width:80px;height:70px;border:3px solid var(--ink);border-radius:10px;background:#dcebf6;transform:perspective(200px) rotateX(45deg)}
+  .demo .d{position:absolute;left:58px;top:2px;font-size:44px;animation:hop 1.6s ease-in-out infinite}
+  @keyframes hop{50%{transform:translateY(-8px)}}
+  .err{color:#b2402f;font-weight:700}
+  /* Over kamerabildet */
+  .ui{position:fixed;z-index:10;pointer-events:none}
+  .ui>*{pointer-events:auto}
+  #top{top:max(12px,env(safe-area-inset-top));left:12px;right:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+  .chip{background:var(--card);border:3px solid var(--ink);border-radius:16px;padding:8px 14px;font:600 16px Fredoka,sans-serif;box-shadow:0 4px 0 rgba(31,59,44,.2);text-decoration:none;color:var(--ink)}
+  #name{display:flex;align-items:center;gap:10px;font-size:22px}
+  #name[hidden]{display:none}
+  #name i{font-style:normal;font-size:13px;background:var(--pc,#dcebf6);border:2px solid var(--ink);border-radius:10px;padding:1px 8px}
+  #scan{left:50%;bottom:max(24px,env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;align-items:center;gap:12px;
+    background:rgba(255,253,246,.95);border:3px solid var(--ink);border-radius:999px;padding:10px 20px;font:600 18px Fredoka,sans-serif;white-space:nowrap}
+  #scan[hidden]{display:none}
+  .frame{width:30px;height:38px;border:3px dashed var(--ink);border-radius:6px;animation:pulse 1.4s ease-in-out infinite}
+  @keyframes pulse{50%{transform:scale(1.15)}}
+  #actions{left:50%;bottom:max(20px,env(safe-area-inset-bottom));transform:translateX(-50%);display:flex;gap:10px;flex-wrap:wrap;justify-content:center;width:calc(100% - 24px)}
+  #actions[hidden]{display:none}
+  #actions .btn{font-size:17px;padding:10px 16px}
+  #actions .btn.on{background:#9fd46b}
+  #compare{left:50%;transform:translateX(-50%);bottom:calc(max(20px,env(safe-area-inset-bottom)) + 70px);background:rgba(255,253,246,.95);border:3px solid var(--ink);border-radius:16px;padding:8px 14px;font:600 16px Fredoka,sans-serif;text-align:center;max-width:calc(100% - 24px)}
+  #compare[hidden]{display:none}
+  /* Faktaark */
+  #facts{position:fixed;z-index:15;left:12px;right:12px;bottom:12px;max-width:560px;margin:0 auto;background:var(--card);border:3px solid var(--ink);border-radius:24px;
+    padding:18px 18px 16px;box-shadow:0 8px 0 rgba(31,59,44,.25);max-height:70vh;overflow:auto;transform:translateY(120%);transition:transform .3s cubic-bezier(.2,.9,.3,1.1)}
+  #facts.open{transform:translateY(0)}
+  #facts h2{font:700 28px Fredoka,sans-serif;margin:0 0 2px}
+  #facts .betyr{margin:0 0 10px;color:#4a6656}
+  #facts dl{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 10px}
+  #facts dl div{background:#f4f1e6;border-radius:12px;padding:8px 10px}
+  #facts dt{font:600 12px Fredoka,sans-serif;text-transform:uppercase;letter-spacing:.05em;color:#6b7a70}
+  #facts dd{margin:2px 0 0;font-weight:700}
+  #facts p{font-size:17px;line-height:1.5;margin:0 0 10px}
+  .park{background:#fff3cf;border-radius:12px;padding:8px 12px}
+  #factsClose{width:100%}
+</style>
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+</head>
+<body>
+<div id="ar"></div>
+
+<div id="start">
+  <div class="startCard">
+    <div class="demo" aria-hidden="true"><div class="c"></div><div class="d">🦖</div></div>
+    <h1>Dinokort AR</h1>
+    <p>Legg et dinokort på bordet og pek iPaden på det. Da kommer dinoen ut av kortet!</p>
+    <button class="btn go" id="go">Start kamera</button>
+    <p class="err" id="err" hidden></p>
+    <p class="small">Kameraet brukes bare her på iPaden. Ingenting blir tatt opp eller sendt noe sted.</p>
+    <p class="small"><a href="index.html">← Tilbake til Dinoparken</a></p>
+  </div>
+</div>
+
+<div class="ui" id="top">
+  <div class="chip" id="name" hidden></div>
+  <a class="chip" href="index.html" id="back">← Parken</a>
+</div>
+<div class="ui" id="scan" hidden><span class="frame"></span>Pek på et dinokort</div>
+<div class="ui" id="compare" hidden></div>
+<div class="ui" id="actions" hidden>
+  <button class="btn" id="bFacts">Fakta</button>
+  <button class="btn" id="bRoar">Brøl!</button>
+  <button class="btn" id="bSize">Sammenlign med meg</button>
+</div>
+<aside id="facts" aria-live="polite"></aside>
+
+<script type="module">
+import * as THREE from 'three';
+import { MindARThree } from 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js';
+
+const DINOS = [{"id": "triceratops", "navn": "Triceratops", "betyr": "«Ansikt med tre horn»", "periode": "Kritt", "tid": "68–66 millioner år siden", "sted": "Nord-Amerika", "lengde": 9, "lengdeTxt": "ca. 9 meter", "vekt": 9000, "vektTxt": "6–12 tonn", "mat": "Planter", "park": 1, "tekst": "Triceratops var en stor planteeter med tre horn og et stort beinskjold rundt nakken. De to største hornene kunne bli over én meter lange. Den levde helt på slutten av dinosaurenes tid, samtidig med T-rex – og forskere har funnet triceratops-bein med bitemerker fra T-rex!"}, {"id": "brachiosaurus", "navn": "Brachiosaurus", "betyr": "«Arm-øgle»", "periode": "Jura", "tid": "154–150 millioner år siden", "sted": "Nord-Amerika", "lengde": 22, "lengdeTxt": "ca. 22 meter", "vekt": 40000, "vektTxt": "30–45 tonn", "mat": "Planter", "park": 2, "tekst": "Brachiosaurus hadde lengre forbein enn bakbein, så ryggen skrånet bakover – litt som på en sjiraff. Med halsen strakt opp nådde den kanskje 12–13 meter opp i trærne. Den måtte spise enorme mengder planter hver eneste dag."}, {"id": "tyrannosaurus", "navn": "Tyrannosaurus rex", "betyr": "«Tyrann-øglekongen»", "periode": "Kritt", "tid": "68–66 millioner år siden", "sted": "Nord-Amerika", "lengde": 12, "lengdeTxt": "ca. 12 meter", "vekt": 8000, "vektTxt": "ca. 8 tonn", "mat": "Kjøtt", "park": 3, "tekst": "T-rex er et av de største kjøttetende dyrene som har levd på land. Kjevene var så kraftige at den kunne knuse bein. Armene var bare rundt én meter lange og hadde to fingre hver. Forskere tror den hadde svært god luktesans."}, {"id": "velociraptor", "navn": "Velociraptor", "betyr": "«Rask røver»", "periode": "Kritt", "tid": "75–71 millioner år siden", "sted": "Asia (Mongolia og Kina)", "lengde": 2, "lengdeTxt": "ca. 2 meter", "vekt": 15, "vektTxt": "ca. 15 kg", "mat": "Kjøtt", "park": 4, "tekst": "Velociraptor var mye mindre enn i filmene – omtrent like stor som en kalkun. Den hadde fjær, og på hver fot hadde den en krum klo som var rundt 6–7 centimeter lang. Et berømt fossil viser en velociraptor som slåss med en planteeter kalt protoceratops."}, {"id": "pteranodon", "navn": "Pteranodon", "betyr": "«Vinge uten tann»", "periode": "Kritt", "tid": "86–84 millioner år siden", "sted": "Nord-Amerika", "lengde": 6.5, "lengdeTxt": "Vingespenn 6–7 meter", "vekt": 35, "vektTxt": "20–50 kg", "mat": "Fisk", "park": 5, "tekst": "Pteranodon var ikke en dinosaur, men en flygeøgle – en slektning av dinosaurene som levde samtidig. Den hadde ingen tenner og fanget fisk i havet, litt som en pelikan. Den lange kammen bakover på hodet var kanskje til for å vise seg fram.", "flyger": true}, {"id": "stegosaurus", "navn": "Stegosaurus", "betyr": "«Tak-øgle»", "periode": "Jura", "tid": "155–150 millioner år siden", "sted": "Nord-Amerika og Portugal", "lengde": 9, "lengdeTxt": "ca. 9 meter", "vekt": 5000, "vektTxt": "ca. 5 tonn", "mat": "Planter", "park": 6, "tekst": "Stegosaurus hadde store plater langs ryggen og fire pigger på halen. Piggene brukte den nok til å forsvare seg mot rovdyr som allosaurus. Hjernen var bitteliten – omtrent som en valnøtt – sammenlignet med den store kroppen."}, {"id": "ankylosaurus", "navn": "Ankylosaurus", "betyr": "«Sammenvokst øgle»", "periode": "Kritt", "tid": "68–66 millioner år siden", "sted": "Nord-Amerika", "lengde": 7, "lengdeTxt": "6–8 meter", "vekt": 6000, "vektTxt": "5–8 tonn", "mat": "Planter", "tekst": "Ankylosaurus var bygget som en stridsvogn. Ryggen var dekket av beinplater, og til og med øyelokkene hadde beinpanser. Bakerst på halen hadde den en tung beinkølle som den kunne svinge mot fiender."}, {"id": "spinosaurus", "navn": "Spinosaurus", "betyr": "«Pigg-øgle»", "periode": "Kritt", "tid": "99–93 millioner år siden", "sted": "Nord-Afrika (Egypt og Marokko)", "lengde": 14, "lengdeTxt": "ca. 14 meter", "vekt": 7000, "vektTxt": "ca. 7 tonn", "mat": "Fisk", "tekst": "Spinosaurus kan ha vært det lengste kjøttetende dyret som har levd på land – enda lengre enn T-rex. Den hadde et stort seil på ryggen og en lang snute som en krokodille. Forskere tror den tilbrakte mye tid i vann og spiste mest fisk."}, {"id": "diplodocus", "navn": "Diplodocus", "betyr": "«Dobbel bjelke»", "periode": "Jura", "tid": "154–152 millioner år siden", "sted": "Nord-Amerika", "lengde": 26, "lengdeTxt": "ca. 26 meter", "vekt": 13000, "vektTxt": "12–15 tonn", "mat": "Planter", "tekst": "Diplodocus var en av de lengste dinosaurene, men ganske slank. Halen var nesten halvparten av hele lengden, og den kunne kanskje smelle med den som en pisk. Tennene satt foran i munnen som en rive, og den brukte dem til å nappe blader."}, {"id": "parasaurolophus", "navn": "Parasaurolophus", "betyr": "«Nesten kam-øgle»", "periode": "Kritt", "tid": "76–74 millioner år siden", "sted": "Nord-Amerika", "lengde": 9.5, "lengdeTxt": "ca. 9,5 meter", "vekt": 2500, "vektTxt": "ca. 2,5 tonn", "mat": "Planter", "tekst": "Parasaurolophus hadde en lang, hul kam bakover på hodet. Luft gikk gjennom kammen, og den kunne lage dype lyder – litt som et horn eller en trombone. Den hadde et nebb som en and og hundrevis av tenner til å male planter."}, {"id": "allosaurus", "navn": "Allosaurus", "betyr": "«Annerledes øgle»", "periode": "Jura", "tid": "155–145 millioner år siden", "sted": "Nord-Amerika og Portugal", "lengde": 8.5, "lengdeTxt": "ca. 8,5 meter", "vekt": 2000, "vektTxt": "ca. 2 tonn", "mat": "Kjøtt", "tekst": "Allosaurus var et av de største rovdyrene i juratiden – mange millioner år før T-rex. Den hadde små horn over øynene og tre fingre med skarpe klør på hver arm. Den jaktet sannsynligvis på planteetere som stegosaurus."}, {"id": "iguanodon", "navn": "Iguanodon", "betyr": "«Leguan-tann»", "periode": "Kritt", "tid": "126–122 millioner år siden", "sted": "Europa (blant annet Belgia og England)", "lengde": 10, "lengdeTxt": "ca. 10 meter", "vekt": 3500, "vektTxt": "3–4 tonn", "mat": "Planter", "tekst": "Iguanodon var en av de aller første dinosaurene som fikk et navn, allerede i 1825. Tennene ligner på tennene til en leguan, derav navnet. På tommelen hadde den en spiss pigg – og den første forskeren trodde at piggen satt på nesen!"}, {"id": "pachycephalosaurus", "navn": "Pachycephalosaurus", "betyr": "«Tykkhodet øgle»", "periode": "Kritt", "tid": "68–66 millioner år siden", "sted": "Nord-Amerika", "lengde": 4.5, "lengdeTxt": "ca. 4,5 meter", "vekt": 450, "vektTxt": "ca. 450 kg", "mat": "Planter", "tekst": "Pachycephalosaurus hadde en hodeskalle som var opptil 25 centimeter tykk! Forskerne er uenige om hva den brukte den til. Kanskje dyttet de til hverandre med hodet, eller kanskje skallen var til for å vise seg fram."}, {"id": "archaeopteryx", "navn": "Archaeopteryx", "betyr": "«Gammel vinge»", "periode": "Jura", "tid": "ca. 150 millioner år siden", "sted": "Europa (Tyskland)", "lengde": 0.5, "lengdeTxt": "ca. 50 centimeter", "vekt": 1, "vektTxt": "under 1 kg", "mat": "Insekter og små dyr", "tekst": "Archaeopteryx var en blanding av dinosaur og fugl. Den hadde fjær og vinger, men også tenner, klør på vingene og en lang beinhale. Den ble funnet i Tyskland i 1861 og hjalp forskerne å forstå at fuglene stammer fra dinosaurene."}, {"id": "compsognathus", "navn": "Compsognathus", "betyr": "«Elegant kjeve»", "periode": "Jura", "tid": "ca. 150 millioner år siden", "sted": "Europa (Tyskland og Frankrike)", "lengde": 1, "lengdeTxt": "ca. 1 meter", "vekt": 3, "vektTxt": "ca. 3 kg", "mat": "Insekter og små dyr", "tekst": "Compsognathus var en av de minste dinosaurene vi kjenner – omtrent som en høne. Den var lett og rask. I magen til et av fossilene fant forskerne restene av en liten øgle som den hadde spist!"}, {"id": "giganotosaurus", "navn": "Giganotosaurus", "betyr": "«Kjempestor sørlig øgle»", "periode": "Kritt", "tid": "99–97 millioner år siden", "sted": "Sør-Amerika (Argentina)", "lengde": 12.5, "lengdeTxt": "12–13 meter", "vekt": 7500, "vektTxt": "7–8 tonn", "mat": "Kjøtt", "tekst": "Giganotosaurus var omtrent like stor som T-rex, kanskje litt lengre. Men de to møttes aldri: Giganotosaurus levde i Sør-Amerika rundt 30 millioner år før T-rex. Hodeskallen var lang og smal, og tennene var flate og skarpe som kniver."}, {"id": "argentinosaurus", "navn": "Argentinosaurus", "betyr": "«Argentina-øgle»", "periode": "Kritt", "tid": "ca. 95 millioner år siden", "sted": "Sør-Amerika (Argentina)", "lengde": 35, "lengdeTxt": "30–35 meter", "vekt": 70000, "vektTxt": "65–75 tonn", "mat": "Planter", "tekst": "Argentinosaurus er blant de største dyrene som noen gang har gått på land. Bare én enkelt ryggvirvel var omtrent like høy som en voksen person! Bare noen få bein er funnet, så forskerne må regne seg fram til hvor stor den var."}, {"id": "dilophosaurus", "navn": "Dilophosaurus", "betyr": "«To-kam-øgle»", "periode": "Jura", "tid": "ca. 190 millioner år siden", "sted": "Nord-Amerika", "lengde": 7, "lengdeTxt": "ca. 7 meter", "vekt": 400, "vektTxt": "ca. 400 kg", "mat": "Kjøtt", "tekst": "Dilophosaurus hadde to tynne kammer på toppen av hodet. I filmen «Jurassic Park» spytter den gift og har en krage rundt halsen, men det finnes ingen bevis for noe av det. I virkeligheten var den mye større enn i filmen – omtrent sju meter lang."}, {"id": "plateosaurus", "navn": "Plateosaurus", "betyr": "«Flat øgle»", "periode": "Trias", "tid": "214–204 millioner år siden", "sted": "Europa (blant annet Tyskland og Sveits)", "lengde": 8, "lengdeTxt": "5–10 meter", "vekt": 2000, "vektTxt": "opptil 4 tonn", "mat": "Planter", "tekst": "Plateosaurus levde i triastiden, lenge før de fleste andre dyrene i biblioteket. Den gikk på to bein og brukte hendene til å gripe tak i greiner. Over hundre skjeletter er funnet, så den er en av de best kjente tidlige dinosaurene."}, {"id": "therizinosaurus", "navn": "Therizinosaurus", "betyr": "«Ljå-øgle»", "periode": "Kritt", "tid": "ca. 70 millioner år siden", "sted": "Asia (Mongolia)", "lengde": 9.5, "lengdeTxt": "9–10 meter", "vekt": 5000, "vektTxt": "ca. 5 tonn", "mat": "Planter", "tekst": "Therizinosaurus hadde de lengste klørne vi kjenner hos noe dyr – over en halv meter lange! Selv om den så skummel ut, spiste den nok mest planter. Klørne brukte den kanskje til å dra greiner nærmere eller til å forsvare seg."}];
+const PI = Math.PI;
+const R = (a,b) => a + Math.random()*(b-a);
+const mats = {};
+const M = c => mats[c] || (mats[c] = new THREE.MeshStandardMaterial({ color:c, flatShading:true, roughness:.85 }));
+const G = {
+  ico:  new THREE.IcosahedronGeometry(1,0),
+  dod:  new THREE.DodecahedronGeometry(1,0),
+  box:  new THREE.BoxGeometry(1,1,1),
+  cone: new THREE.ConeGeometry(1,1,6),
+  cone4:new THREE.ConeGeometry(1,1,4),
+  cyl:  new THREE.CylinderGeometry(1,1,1,6),
+  cyl8: new THREE.CylinderGeometry(1,1,1,8),
+  neck: new THREE.CylinderGeometry(.72,1,1,6),
+};
+function add(parent, geo, color, x=0,y=0,z=0, sx=1,sy=1,sz=1, cast=true){
+  const m = new THREE.Mesh(geo, color instanceof THREE.Material ? color : M(color));
+  m.position.set(x,y,z); m.scale.set(sx,sy,sz);
+  parent.add(m); return m;
+}
+
+function legPivot(parent,x,y,z,len,thick,color){
+  const p = new THREE.Group(); p.position.set(x,y,z); parent.add(p);
+  add(p,G.cyl,color,0,-len/2,0,thick,len,thick);
+  add(p,G.box,color,0,-len+.08,thick*.5,thick*2.2,.16,thick*2.8);
+  return p;
+}
+function tail(parent,x,y,z,len,r,color,tilt=0){
+  const p = new THREE.Group(); p.position.set(x,y,z); parent.add(p);
+  const s = new THREE.Group(); s.rotation.x = tilt; p.add(s);
+  const c = add(s,G.cone,color,0,0,-len/2,r,len,r); c.rotation.x = -Math.PI/2;
+  p.userData.seg = s;
+  return p;
+}
+function neck(parent,x,y,z,len,r,tilt,color){
+  const p = new THREE.Group(); p.position.set(x,y,z); p.rotation.x = tilt; parent.add(p);
+  add(p,G.neck,color,0,len/2,0,r,len*1.05,r);
+  const top = new THREE.Group(); top.position.y = len; top.rotation.x = -tilt; p.add(top);
+  return { pivot:p, top };
+}
+function eyes(head,x,y,z,s){
+  for(const sx of [-1,1]){
+    add(head,G.ico,0xffffff,sx*x,y,z,s,s,s,false);
+    add(head,G.ico,0x1b1b1b,sx*(x+s*.55),y+s*.1,z+s*.25,s*.55,s*.6,s*.55,false);
+  }
+}
+
+function buildTri(){
+  const g=new THREE.Group(), C=0xe0782f, F=0xf4c95d, H=0xfff3dc, legs=[];
+  for(const [x,z,o] of [[.62,.85,0],[-.62,.85,PI],[.62,-.85,PI],[-.62,-.85,0]]) legs.push([legPivot(g,x,.95,z,.95,.25,C),o]);
+  add(g,G.ico,C,0,1.55,0,1.1,.9,1.55);
+  add(g,G.ico,F,0,1.3,.3,.8,.55,1.1);
+  const t = tail(g,0,1.5,-1.3,1.5,.38,C,-.15);
+  const n = neck(g,0,1.65,1.25,.45,.38,1.25,C);
+  add(n.top,G.ico,C,0,0,.35,.62,.55,.8);
+  const fr = add(n.top,G.cyl,F,0,.4,-.05,.95,.12,.95); fr.rotation.x = 1.15;
+  for(const sx of [-1,1]){ const h=add(n.top,G.cone,H,sx*.25,.5,.5,.09,.75,.09); h.rotation.x=1.0; }
+  add(n.top,G.cone,H,0,.25,1.0,.08,.35,.08).rotation.x=.5;
+  add(n.top,G.cone4,0xc9a06a,0,-.15,1.05,.18,.35,.18).rotation.x=PI/2;
+  eyes(n.top,.38,.2,.55,.13);
+  return { g, legs, tail:t, neck:n.pivot, speed:1.2, stride:3.0, amp:.45 };
+}
+function buildBrachio(){
+  const g=new THREE.Group(), C=0x5b9bd5, B=0xb7d8f2, legs=[];
+  for(const [x,z,h,o] of [[.6,.8,1.75,0],[-.6,.8,1.75,PI],[.6,-.9,1.45,PI],[-.6,-.9,1.45,0]]) legs.push([legPivot(g,x,h,z,h,.3,C),o]);
+  const b=add(g,G.ico,C,0,2.05,0,1.05,.95,1.7); b.rotation.x=-.12;
+  add(g,G.ico,B,0,1.75,.2,.8,.6,1.3).rotation.x=-.12;
+  for(const [x,y,z] of [[.55,2.6,.3],[-.5,2.55,-.4],[.3,2.85,-.9]]) add(g,G.ico,0x3f7fbd,x,y,z,.22,.1,.28,false);
+  const t = tail(g,0,1.95,-1.5,2.8,.45,C,-.25);
+  const n = neck(g,0,2.5,1.25,3.3,.32,.38,C);
+  add(n.top,G.ico,C,0,.05,.25,.38,.32,.58);
+  eyes(n.top,.27,.17,.3,.11);
+  return { g, legs, tail:t, neck:n.pivot, speed:.7, stride:2.2, amp:.35 };
+}
+function buildStego(){
+  const g=new THREE.Group(), C=0x9b84d6, P=0xf08a4b, legs=[];
+  for(const [x,z,h,o] of [[.6,.8,.85,0],[-.6,.8,.85,PI],[.6,-.8,1.15,PI],[-.6,-.8,1.15,0]]) legs.push([legPivot(g,x,h,z,h,.26,C),o]);
+  const b=add(g,G.ico,C,0,1.55,0,1.0,.95,1.6); b.rotation.x=.15;
+  for(let i=0;i<6;i++){
+    const z=1.0-i*.42, y=1.55+.95*Math.sqrt(Math.max(0,1-(z/1.7)**2))-z*.15, h=.6-Math.abs(z+.1)*.18;
+    add(g,G.cone4,P,(i%2?.13:-.13),y+h*.3,z,.07,h,.36);
+  }
+  const t = tail(g,0,1.75,-1.4,1.7,.33,C,.05);
+  for(const [sx,zz] of [[1,-1.25],[-1,-1.25],[1,-1.55],[-1,-1.55]]){ const s=add(t,G.cone,0xfff3dc,sx*.2,.12,zz,.06,.55,.06); s.rotation.z=-sx*1.0; }
+  const n = neck(g,0,1.45,1.35,.5,.3,1.7,C);
+  add(n.top,G.ico,C,0,0,.3,.33,.28,.5);
+  eyes(n.top,.22,.1,.35,.1);
+  return { g, legs, tail:t, neck:n.pivot, speed:.9, stride:3.0, amp:.45 };
+}
+function buildTrex(){
+  const g=new THREE.Group(), C=0xc2543d, B=0xf0c99a, legs=[];
+  for(const [x,o] of [[.45,0],[-.45,PI]]) legs.push([legPivot(g,x,1.45,0,1.45,.32,C),o]);
+  for(const sx of [-1,1]) add(g,G.ico,C,sx*.45,1.45,0,.38,.55,.55);
+  const b=add(g,G.ico,C,0,2.05,.1,.9,.95,1.45); b.rotation.x=-.3;
+  add(g,G.ico,B,0,1.85,.45,.65,.6,.9).rotation.x=-.3;
+  const t = tail(g,0,1.95,-1.0,2.6,.55,C,.05);
+  const n = neck(g,0,2.55,1.0,.55,.42,.9,C);
+  add(n.top,G.ico,C,0,.12,.45,.62,.5,.95);
+  for(let i=0;i<4;i++) for(const sx of [-1,1]) add(n.top,G.cone,0xffffff,sx*.3,-.25,.6+i*.18,.04,.14,.04,false).rotation.x=PI;
+  const jaw = new THREE.Group(); jaw.position.set(0,-.1,0); n.top.add(jaw);
+  add(jaw,G.ico,B,0,-.15,.5,.5,.2,.82);
+  eyes(n.top,.42,.32,.6,.13);
+  for(const sx of [-1,1]){ const a=add(g,G.box,C,sx*.55,1.95,.95,.14,.14,.45); a.rotation.x=.6; }
+  return { g, legs, tail:t, neck:n.pivot, jaw, speed:1.5, stride:2.4, amp:.6 };
+}
+function buildRaptor(){
+  const g=new THREE.Group(), C=0x2f8f7a, B=0xe8e0b0, S=0x1f6656, legs=[];
+  for(const [x,o] of [[.22,0],[-.22,PI]]) legs.push([legPivot(g,x,.8,0,.8,.14,C),o]);
+  const b=add(g,G.ico,C,0,1.05,.05,.38,.4,.85); b.rotation.x=-.2;
+  add(g,G.ico,B,0,.92,.25,.28,.25,.55).rotation.x=-.2;
+  for(const z of [.3,-.1,-.45]) add(g,G.box,S,0,1.38,z,.3,.06,.12,false);
+  const t = tail(g,0,1.05,-.65,1.7,.26,C,.08);
+  const n = neck(g,0,1.3,.65,.45,.16,.7,C);
+  add(n.top,G.ico,C,0,.05,.25,.25,.22,.5);
+  for(let i=0;i<3;i++) add(n.top,G.cone,0xf2c230,0,.25,-.05-i*.15,.06,.35,.06).rotation.x=-.6;
+  eyes(n.top,.18,.12,.3,.08);
+  for(const sx of [-1,1]){ const a=add(g,G.box,C,sx*.3,1.0,.55,.07,.07,.35); a.rotation.x=.7; }
+  return { g, legs, tail:t, neck:n.pivot, speed:3.0, stride:3.4, amp:.7 };
+}
+function buildPtero(){
+  const g=new THREE.Group(), C=0xd9714e, Wc=0xeaa36c;
+  add(g,G.ico,C,0,0,0,.28,.25,.75);
+  const head=new THREE.Group(); head.position.set(0,.15,.75); g.add(head);
+  add(head,G.ico,C,0,0,0,.2,.2,.28);
+  add(head,G.cone4,0xf2c230,0,-.02,.55,.08,.8,.08).rotation.x=PI/2;
+  add(head,G.cone4,C,0,.12,-.45,.06,.7,.12).rotation.x=-PI/2-.3;
+  eyes(head,.15,.06,.08,.07);
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute([0,0,.45, 2.4,0,-.1, 0,0,-.35],3));
+  geo.computeVertexNormals();
+  const wm=new THREE.MeshStandardMaterial({color:Wc,flatShading:true,side:THREE.DoubleSide});
+  const wings=[];
+  for(const sx of [1,-1]){ const w=new THREE.Group(); w.position.set(sx*.15,.05,0); g.add(w);
+    const m=new THREE.Mesh(geo,wm); m.scale.x=sx; m.castShadow=true; w.add(m); wings.push(w); }
+  return { g, wings, flyer:true };
+}
+
+/* ---------- 14 nye dinoer (samme byggeklosser som i parken, ser mot +Z, føttene på y=0) ---------- */
+function stripes(g,color,y,z0,z1,n,w,h){ for(let i=0;i<n;i++){ const z=z0+(z1-z0)*i/(n-1); add(g,G.box,color,0,y,z,w,h,.12,false); } }
+
+/* Tobeint rovdyr – brukes for allosaurus, giganotosaurus, dilophosaurus, spinosaurus, compsognathus */
+function buildTheropod(o){
+  const g=new THREE.Group(), C=o.C, B=o.B, legs=[];
+  const L=o.leg, hip=L;
+  for(const [x,ph] of [[.42*o.w,0],[-.42*o.w,PI]]) legs.push([legPivot(g,x,hip,0,L,.28*o.w,C),ph]);
+  for(const sx of [-1,1]) add(g,G.ico,C,sx*.42*o.w,hip,0,.34*o.w,.5*o.w,.5*o.w);
+  const by=hip+.55*o.w;
+  const b=add(g,G.ico,C,0,by,.1,.85*o.w,.85*o.w,1.4*o.len); b.rotation.x=-.2;
+  add(g,G.ico,B,0,by-.2*o.w,.4,.6*o.w,.5*o.w,.9*o.len).rotation.x=-.2;
+  if(o.stripe) stripes(g,o.stripe,by+.62*o.w,.6,-.6,4,.9*o.w,.05);
+  const t=tail(g,0,by-.05,-1.0*o.len,2.4*o.len,.5*o.w,C,.06);
+  const n=neck(g,0,by+.4*o.w,.9*o.len,o.neckLen||.55,.38*o.w,o.neckTilt||.9,C);
+  const hl=o.head;
+  add(n.top,G.ico,C,0,.1,.45*hl,.5*o.w,.42*o.w,.95*hl);
+  const jaw=new THREE.Group(); jaw.position.set(0,-.08,0); n.top.add(jaw);
+  add(jaw,G.ico,B,0,-.12,.45*hl,.42*o.w,.16,.78*hl);
+  if(o.teeth!==false) for(let i=0;i<4;i++) for(const sx of [-1,1]) add(n.top,G.cone,0xffffff,sx*.26*o.w,-.2,.55*hl+i*.17*hl,.035,.12,.035,false).rotation.x=PI;
+  eyes(n.top,.36*o.w,.26,.55*hl,.12);
+  const arm=o.arm||.45;
+  for(const sx of [-1,1]){ const a=add(g,G.box,C,sx*.5*o.w,by-.1,.9*o.len,.13,.13,arm); a.rotation.x=.6; }
+  if(o.extra) o.extra({g,head:n.top,by,C,B});
+  return { g, legs, tail:t, neck:n.pivot, jaw, speed:o.speed||1.4, stride:o.stride||2.4, amp:o.amp||.6 };
+}
+/* Firbeint planteeter – ankylosaurus, iguanodon, parasaurolophus */
+function buildQuad(o){
+  const g=new THREE.Group(), C=o.C, B=o.B, legs=[];
+  for(const [x,z,h,ph] of [[.6,.8,o.front,0],[-.6,.8,o.front,PI],[.6,-.8,o.back,PI],[-.6,-.8,o.back,0]]) legs.push([legPivot(g,x*o.w,h,z*o.len,h,.27*o.w,C),ph]);
+  const by=Math.max(o.front,o.back)+.45;
+  const b=add(g,G.ico,C,0,by,0,1.05*o.w,o.bodyH||.85,1.55*o.len); b.rotation.x=(o.back-o.front)*.25;
+  add(g,G.ico,B,0,by-.25,.1,.75*o.w,.45,1.1*o.len);
+  const t=tail(g,0,by,-1.35*o.len,o.tailLen||2,.4*o.w,C,(o.back-o.front)*.2);
+  const n=neck(g,0,by+.1,1.3*o.len,o.neckLen||.6,.32*o.w,o.neckTilt||1.1,C);
+  if(o.extra) o.extra({g,head:n.top,tail:t,by,C,B});
+  return { g, legs, tail:t, neck:n.pivot, speed:o.speed||1, stride:o.stride||3, amp:o.amp||.45 };
+}
+/* Langhals – diplodocus, argentinosaurus */
+function buildSauropod(o){
+  const g=new THREE.Group(), C=o.C, B=o.B, legs=[];
+  for(const [x,z,ph] of [[.62,.85,0],[-.62,.85,PI],[.62,-.85,PI],[-.62,-.85,0]]) legs.push([legPivot(g,x*o.w,o.leg,z*o.len,o.leg,.33*o.w,C),ph]);
+  const by=o.leg+.5;
+  add(g,G.ico,C,0,by,0,1.1*o.w,1.0*o.w,1.75*o.len);
+  add(g,G.ico,B,0,by-.3,.1,.85*o.w,.6,1.35*o.len);
+  if(o.spots) for(const [x,y,z] of [[.6,by+.55,.4],[-.55,by+.5,-.3],[.35,by+.75,-.9],[-.3,by+.7,.9]]) add(g,G.ico,o.spots,x*o.w,y,z*o.len,.24,.1,.3,false);
+  const t=tail(g,0,by,-1.6*o.len,o.tailLen,.48*o.w,C,o.tailTilt||-.08);
+  const n=neck(g,0,by+.3,1.4*o.len,o.neckLen,.36*o.w,o.neckTilt,C);
+  add(n.top,G.ico,C,0,.05,.28,.36,.3,.58);
+  eyes(n.top,.26,.16,.3,.1);
+  return { g, legs, tail:t, neck:n.pivot, speed:.6, stride:2, amp:.33 };
+}
+
+function buildAnkylo(){
+  return buildQuad({ C:0x8f8045, B:0xc4b27a, w:1.25, len:1, front:.65, back:.7, bodyH:.75, tailLen:1.7, neckLen:.35, neckTilt:1.4, speed:.7, amp:.35,
+    extra({g,head,tail:t,by}){
+      for(let i=0;i<5;i++){ const z=.9-i*.45; for(const sx of [-1,1]) add(g,G.cone4,0xd9c48a,sx*1.25,by-.05,z,.12,.4,.12).rotation.z=-sx*1.35;
+        for(const sx of [-.5,0,.5]) add(g,G.ico,0x6f6335,sx,by+.62,z,.16,.12,.16,false); }
+      const club=add(t.userData.seg,G.dod,0x6f6335,0,0,-1.75,.42,.3,.32);
+      add(head,G.ico,0x8f8045,0,0,.3,.55,.38,.5);
+      for(const sx of [-1,1]) add(head,G.cone4,0xd9c48a,sx*.45,.12,0,.08,.32,.08).rotation.z=-sx*1.2;
+      eyes(head,.38,.12,.45,.09);
+    } });
+}
+function buildIguanodon(){
+  return buildQuad({ C:0x8b9a8c, B:0xcfd6c4, w:1, len:1.05, front:1.0, back:1.45, neckLen:.7, neckTilt:.9, tailLen:2.4,
+    extra({g,head,by}){
+      add(head,G.ico,0x8b9a8c,0,.05,.35,.36,.34,.62);
+      add(head,G.box,0x5d6b5c,0,-.12,.85,.3,.12,.3);
+      eyes(head,.3,.16,.35,.1);
+      for(const sx of [-1,1]) add(g,G.cone,0xeeeadb,sx*.75,1.0,1.05,.07,.35,.07).rotation.x=-.4;
+    } });
+}
+function buildParasaur(){
+  return buildQuad({ C:0x5f9e55, B:0xd5e3b4, w:1, len:1.05, front:1.0, back:1.5, neckLen:.7, neckTilt:.85, tailLen:2.4,
+    extra({g,head,by}){
+      stripes(g,0x4a7f43,by+.75,.7,-.7,5,.9,.05);
+      add(head,G.ico,0x5f9e55,0,.05,.32,.34,.34,.6);
+      add(head,G.box,0xd9a74a,0,-.1,.85,.34,.1,.32);
+      const crest=add(head,G.cyl,0x3f7a39,0,.6,-.4,.11,1.6,.11); crest.rotation.x=-1.05;
+      eyes(head,.29,.16,.35,.1);
+    } });
+}
+function buildSpino(){
+  return buildTheropod({ C:0x8a9a4a, B:0xd8d6a0, w:1, len:1.15, leg:1.25, head:1.3, neckTilt:1.05, arm:.55, speed:1.2,
+    extra({g,head,by}){
+      const sh=new THREE.Shape(); sh.moveTo(-1.2,0); sh.quadraticCurveTo(0,2.6,1.2,0); sh.lineTo(-1.2,0);
+      const sail=new THREE.Mesh(new THREE.ShapeGeometry(sh,8),new THREE.MeshStandardMaterial({color:0xe0703a,flatShading:true,side:THREE.DoubleSide}));
+      sail.rotation.y=PI/2; sail.position.set(0,by+.45,0); sail.scale.set(1,1.4,1); g.add(sail);
+      for(let i=0;i<7;i++){ const z=-.9+i*.3, h=1.82*(1-(z/1.2)**2); add(g,G.box,0xb04a2a,.02,by+.45+h/2,z,.07,h,.07,false); }
+    } });
+}
+function buildAllo(){
+  return buildTheropod({ C:0xd2a63c, B:0xf1dfa8, stripe:0x7a4a22, w:.95, len:1, leg:1.35, head:1.05, arm:.6,
+    extra({head}){ for(const sx of [-1,1]) add(head,G.cone,0x9a5a22,sx*.3,.48,.55,.09,.25,.09); } });
+}
+function buildGiga(){
+  return buildTheropod({ C:0x9aa1a7, B:0xdedfd8, stripe:0x5f666d, w:1.05, len:1.1, leg:1.45, head:1.2, arm:.5, speed:1.3 });
+}
+function buildDilo(){
+  return buildTheropod({ C:0xc2bf3c, B:0xeeeab0, stripe:0x5d6a2a, w:.8, len:.95, leg:1.3, head:.95, arm:.55, speed:1.6,
+    extra({head}){
+      for(const sx of [-1,1]){ const c=new THREE.Mesh(new THREE.CircleGeometry(.42,8,0,PI),new THREE.MeshStandardMaterial({color:0xd8572e,flatShading:true,side:THREE.DoubleSide}));
+        c.rotation.y=PI/2; c.position.set(sx*.1,.38,.5); c.scale.set(1.25,.7,1); head.add(c); }
+    } });
+}
+function buildCompso(){
+  return buildTheropod({ C:0x8cc56a, B:0xe3f0c4, w:.5, len:.75, leg:.85, head:.65, arm:.35, teeth:false, neckLen:.6, neckTilt:.7, speed:2.6, stride:3.4, amp:.75,
+    extra({g,by}){ for(let i=0;i<6;i++) add(g,G.ico,0x4f8a3a,R(-.3,.3),by+.35,R(-.6,.6),.08,.04,.08,false); } });
+}
+function buildPachy(){
+  return buildTheropod({ C:0xc9a77a, B:0xf0dcb8, w:.8, len:.85, leg:1.05, head:.75, arm:.35, teeth:false, neckTilt:.6, speed:1.3,
+    extra({head}){
+      add(head,G.ico,0xa37f50,0,.42,.25,.48,.42,.55);
+      for(let i=0;i<8;i++){ const a=i/8*PI*2; add(head,G.cone,0x7a5a35,Math.cos(a)*.42,.3,.25+Math.sin(a)*.5,.06,.14,.06,false); }
+    } });
+}
+function buildPlateo(){
+  return buildTheropod({ C:0xa34b3a, B:0xe9c6a3, w:.75, len:1.05, leg:1.3, head:.55, arm:.7, teeth:false, neckLen:1.4, neckTilt:.55, speed:1.1,
+    extra({g,by}){ for(const sx of [-1,1]) add(g,G.cone,0xf2e6d0,sx*.4,by-.45,1.45,.05,.22,.05).rotation.x=2.2; } });
+}
+function buildTheri(){
+  return buildTheropod({ C:0x9a6a48, B:0xf1e4cf, w:.95, len:.9, leg:1.4, head:.55, arm:.9, teeth:false, neckLen:1.5, neckTilt:.35, speed:.9,
+    extra({g,by}){
+      add(g,G.ico,0xf1e4cf,0,by-.25,.35,.75,.7,.75);
+      for(let i=0;i<10;i++) add(g,G.cone4,i%2?0xf1e4cf:0x7a4f35,R(-.6,.6),by+R(.2,.8),R(-.8,.8),.12,.4,.12,false).rotation.set(R(-.5,.5),0,R(-.5,.5));
+      for(const sx of [-1,1]) for(let k=0;k<3;k++){ const c=add(g,G.cone,0xf6f0e0,sx*(.5+k*.07),by-.7,1.5+k*.05,.05,.9,.05); c.rotation.x=2.4; }
+    } });
+}
+function buildDiplo(){ return buildSauropod({ C:0x7f907b, B:0xc9d4bf, spots:0x5f6f5b, w:.9, len:1.15, leg:1.6, neckLen:3.2, neckTilt:.95, tailLen:4.2, tailTilt:-.02 }); }
+function buildArgentino(){ return buildSauropod({ C:0xc6a578, B:0xe9d6b4, spots:0xa3835a, w:1.2, len:1.25, leg:1.9, neckLen:3.4, neckTilt:.6, tailLen:3.4 }); }
+function buildArchae(){
+  const g=new THREE.Group(), C=0x2d2a2a, Wc=0x3b2f28;
+  add(g,G.ico,C,0,0,0,.26,.24,.55);
+  const head=new THREE.Group(); head.position.set(0,.14,.55); g.add(head);
+  add(head,G.ico,C,0,0,0,.17,.17,.22);
+  add(head,G.cone4,0x5a4a3a,0,-.02,.28,.06,.32,.06).rotation.x=PI/2;
+  eyes(head,.12,.05,.08,.06);
+  for(let i=0;i<5;i++) add(g,G.cone4,i%2?0x5a3a2a:C,0,0,-.55-i*.12,.13,.3,.03,false).rotation.x=-PI/2;
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute([0,0,.3, 1.6,0,-.05, 1.1,0,-.4, 0,0,-.3],3)); geo.setIndex([0,1,2,0,2,3]);
+  geo.computeVertexNormals();
+  const wm=new THREE.MeshStandardMaterial({color:Wc,flatShading:true,side:THREE.DoubleSide});
+  const wings=[];
+  for(const sx of [1,-1]){ const w=new THREE.Group(); w.position.set(sx*.12,.04,0); g.add(w);
+    const m=new THREE.Mesh(geo,wm); m.scale.x=sx; m.castShadow=true; w.add(m);
+    add(w,G.cone,0xddd0c0,sx*1.55,0,.02,.025,.12,.025,false).rotation.z=sx*PI/2; wings.push(w); }
+  return { g, wings, flyer:true };
+}
+
+
+const BUILDERS = {
+  triceratops:buildTri, brachiosaurus:buildBrachio, tyrannosaurus:buildTrex, velociraptor:buildRaptor, pteranodon:buildPtero,
+  stegosaurus:buildStego, ankylosaurus:buildAnkylo, spinosaurus:buildSpino, diplodocus:buildDiplo, parasaurolophus:buildParasaur,
+  allosaurus:buildAllo, iguanodon:buildIguanodon, pachycephalosaurus:buildPachy, archaeopteryx:buildArchae, compsognathus:buildCompso,
+  giganotosaurus:buildGiga, argentinosaurus:buildArgentino, dilophosaurus:buildDilo, plateosaurus:buildPlateo, therizinosaurus:buildTheri,
+};
+const PER_COL = { Trias:'#fbecd3', Jura:'#e3f1dc', Kritt:'#dcebf6' };
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- Elev-figur til sammenligning (1 enhet høy) ---------- */
+function buildKid(){
+  const g=new THREE.Group();
+  for(const sx of [-1,1]) add(g,G.cyl,0x3b4a6b,sx*.07,.22,0,.06,.44,.06);
+  add(g,G.box,0xe85d5d,0,.6,0,.3,.36,.16);
+  for(const sx of [-1,1]){ const a=add(g,G.cyl,0xe85d5d,sx*.2,.6,0,.045,.32,.045); a.rotation.z=sx*.2; }
+  add(g,G.ico,0xf3d2b3,0,.9,0,.12,.13,.12);
+  add(g,G.ico,0x6b4329,0,.98,-.02,.12,.07,.12);
+  return g;
+}
+
+/* ---------- MindAR ---------- */
+let mind, current=null, sizeOn=false;
+const slots = [];
+const clock = new THREE.Clock();
+
+function makeSlot(i, anchor){
+  const d = DINOS[i];
+  const wrap = new THREE.Group(); wrap.rotation.x = PI/2; anchor.group.add(wrap);   // dinoens «opp» peker ut av kortet
+  const holder = new THREE.Group(); wrap.add(holder);
+  const b = BUILDERS[d.id]();
+  const box = new THREE.Box3().setFromObject(b.g), sz = box.getSize(new THREE.Vector3());
+  const s = (b.flyer ? .55 : .78) / Math.max(sz.x, sz.z, sz.y*.85);
+  holder.scale.setScalar(s); holder.add(b.g);
+  b.g.position.y = b.flyer ? 0 : -box.min.y;
+  const blob = new THREE.Mesh(new THREE.CircleGeometry(1,24), new THREE.MeshBasicMaterial({ color:0x000000, transparent:true, opacity:.22, depthWrite:false }));
+  blob.rotation.x = -PI/2;
+  if(b.flyer){ blob.position.y=.003; blob.scale.set(.12,.12,1); wrap.add(blob); }
+  else { blob.position.y=.01; blob.scale.set(sz.x*.55, sz.z*.55, 1); holder.add(blob); }
+  const kid = buildKid(); kid.visible=false; wrap.add(kid);
+  const visLen = (b.flyer ? sz.x : Math.max(sz.x,sz.z)) * s;
+  const kidH = Math.min(1.6, 1.4 * visLen / d.lengde);
+  kid.scale.setScalar(kidH); kid.position.set(.42, 0, .05); kid.rotation.y = -.5;
+  const slot = { i, d, b, wrap, holder, blob, kid, kidH, s, theta:R(0,6.28), phase:0, mode:'walk', modeT:R(2,4), pop:0, roar:0, visible:false };
+  slots[i] = slot; return slot;
+}
+function animate(slot, dt, t){
+  const { b, holder } = slot;
+  slot.pop = Math.min(1, slot.pop + dt*2.5);
+  const pk = slot.pop<1 ? (1-Math.pow(1-slot.pop,3))*(1+.2*Math.sin(slot.pop*PI)) : 1;
+  holder.scale.setScalar(slot.s * pk);
+  if(b.flyer){
+    slot.theta += dt*.8;
+    const r=.26; holder.position.set(Math.cos(slot.theta)*r, .32+Math.sin(t*1.3)*.04, Math.sin(slot.theta)*r);
+    holder.rotation.set(0, Math.atan2(-Math.sin(slot.theta), Math.cos(slot.theta)), -.35);
+    const flap = Math.sin(t*6)*.55; b.wings[0].rotation.z=flap; b.wings[1].rotation.z=-flap;
+    slot.blob.position.set(holder.position.x, .003, holder.position.z);
+    return;
+  }
+  slot.modeT -= dt;
+  if(slot.modeT<=0){ slot.mode = slot.mode==='walk' ? 'idle' : 'walk'; slot.modeT = slot.mode==='walk' ? R(3,5) : R(1.5,3); }
+  const walking = slot.mode==='walk' && slot.roar<=0;
+  if(walking){
+    slot.theta += dt*.55*Math.min(1.6,b.speed);
+    slot.phase += dt*b.stride*2;
+    for(const [p,o] of b.legs) p.rotation.x = Math.sin(slot.phase+o)*b.amp;
+  } else for(const [p] of b.legs) p.rotation.x *= .85;
+  const r=.11;
+  holder.position.set(Math.cos(slot.theta)*r, walking?Math.abs(Math.sin(slot.phase))*.006:0, Math.sin(slot.theta)*r);
+  holder.rotation.y = Math.atan2(-Math.sin(slot.theta), Math.cos(slot.theta));
+  if(b.tail) b.tail.rotation.y = Math.sin(t*(walking?3:1.2))*(walking?.25:.12);
+  if(b.neck){ if(slot.neckBase===undefined) slot.neckBase=b.neck.rotation.x; b.neck.rotation.x = slot.neckBase + Math.sin(t*1.3)*.08 - (slot.roar>0? Math.sin(slot.roar/1.4*PI)*.25 : 0); }
+  if(b.jaw) b.jaw.rotation.x = slot.roar>0 ? Math.sin((1.4-slot.roar)/1.4*PI)*.6 : 0;
+  slot.roar = Math.max(0, slot.roar-dt);
+}
+
+/* ---------- Lyd: brøl laget i nettleseren ---------- */
+let actx=null;
+function roarSound(d){
+  if(!actx) return;
+  const big = Math.min(1, Math.log10(Math.max(1,d.vekt))/4.8);   // 0 = lite dyr, 1 = kjempe
+  const t0 = actx.currentTime, dur = .5 + big*1.0;
+  const out = actx.createGain(); out.gain.setValueAtTime(.0001,t0); out.gain.exponentialRampToValueAtTime(.9,t0+.08); out.gain.exponentialRampToValueAtTime(.0001,t0+dur); out.connect(actx.destination);
+  const osc = actx.createOscillator(); osc.type='sawtooth';
+  const f0 = 520 - big*440; osc.frequency.setValueAtTime(f0*1.3,t0); osc.frequency.exponentialRampToValueAtTime(f0*.7,t0+dur);
+  const lfo = actx.createOscillator(), lg = actx.createGain(); lfo.frequency.value = 18+big*14; lg.gain.value = f0*.15; lfo.connect(lg); lg.connect(osc.frequency);
+  const n = actx.createBuffer(1, actx.sampleRate*dur, actx.sampleRate), ch=n.getChannelData(0); for(let i=0;i<ch.length;i++) ch[i]=Math.random()*2-1;
+  const ns = actx.createBufferSource(); ns.buffer=n;
+  const lp = actx.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value = 900 - big*600; lp.Q.value=4;
+  const ng = actx.createGain(); ng.gain.value=.5;
+  osc.connect(lp); ns.connect(ng); ng.connect(lp); lp.connect(out);
+  osc.start(t0); lfo.start(t0); ns.start(t0); osc.stop(t0+dur); lfo.stop(t0+dur); ns.stop(t0+dur);
+}
+
+/* ---------- Grensesnitt ---------- */
+function parkNote(d){
+  if(!d.park) return '';
+  try{
+    const st = JSON.parse(localStorage.getItem('dinoparken-v8')||'null');
+    const list = st && st.dinos && st.dinos[d.park] || [];
+    if(list.length){ const names=list.map(x=>x.name).filter(Boolean);
+      return `<p class="park">${names.length?`<b>${esc(names.join(' og '))}</b> bor`:`${list.length} ${d.navn} bor`} i Dinoparken din!</p>`; }
+    return `<p class="park">Denne dinoen kan du klekke i Dinoparken.</p>`;
+  }catch(e){ return ''; }
+}
+function show(slot){
+  current = slot; const d = slot.d;
+  $('name').hidden=false; $('name').style.setProperty('--pc',PER_COL[d.periode]);
+  $('name').innerHTML = `${esc(d.navn)} <i>${d.periode}</i>`;
+  $('scan').hidden=true; $('actions').hidden=false;
+  slot.kid.visible = sizeOn; updateCompare();
+  if($('facts').classList.contains('open')) fillFacts(d);
+}
+function hide(){
+  current=null; $('name').hidden=true; $('actions').hidden=true; $('compare').hidden=true; $('scan').hidden=false;
+}
+function updateCompare(){
+  if(!current || !sizeOn){ $('compare').hidden=true; return; }
+  const d=current.d, x=d.lengde/1.4;
+  $('compare').hidden=false;
+  $('compare').textContent = d.flyger
+    ? `Vingene var like brede som ca. ${Math.round(x)} elever på rad!`
+    : x<1 ? `${d.navn} var mindre enn deg!` : `${d.navn} var like lang som ca. ${Math.round(x)} elever på rad!`;
+}
+function fillFacts(d){
+  $('facts').innerHTML = `
+    <h2>${esc(d.navn)}</h2>
+    <p class="betyr">Navnet betyr ${esc(d.betyr)}${d.flyger?' · <b>flygeøgle, ikke dinosaur</b>':''}</p>
+    <dl>
+      <div><dt>${d.flyger?'Vingespenn':'Lengde'}</dt><dd>${esc(d.lengdeTxt.replace('Vingespenn ',''))}</dd></div>
+      <div><dt>Vekt</dt><dd>${esc(d.vektTxt)}</dd></div>
+      <div><dt>Levde for</dt><dd>${esc(d.tid)}</dd></div>
+      <div><dt>Spiste</dt><dd>${esc(d.mat)}</dd></div>
+    </dl>
+    <p>${esc(d.tekst)}</p>
+    ${parkNote(d)}
+    <button class="btn" id="factsClose">Lukk</button>`;
+  $('factsClose').addEventListener('click',()=>$('facts').classList.remove('open'));
+}
+$('bFacts').addEventListener('click',()=>{ if(!current) return; fillFacts(current.d); $('facts').classList.add('open'); });
+$('bRoar').addEventListener('click',()=>{ if(!current) return; current.roar=1.4; roarSound(current.d); });
+$('bSize').addEventListener('click',()=>{ sizeOn=!sizeOn; $('bSize').classList.toggle('on',sizeOn); for(const s of slots) if(s) s.kid.visible=sizeOn; updateCompare(); });
+
+/* ---------- Start ---------- */
+async function start(){
+  $('go').disabled=true; $('go').textContent='Starter kamera …'; $('err').hidden=true;
+  try{ actx = new (window.AudioContext||window.webkitAudioContext)(); await actx.resume(); }catch(e){ actx=null; }
+  try{
+    mind = new MindARThree({ container:$('ar'), imageTargetSrc:'./targets.mind', maxTrack:1, uiLoading:'no', uiScanning:'no', uiError:'no',
+      filterMinCF:.0001, filterBeta:.001 });
+    const { renderer, scene, camera } = mind;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    scene.add(new THREE.HemisphereLight(0xffffff, 0x8fae7a, 1.6));
+    const sun = new THREE.DirectionalLight(0xfff1d6, 1.8); sun.position.set(.5,1,1.5); scene.add(sun);
+    DINOS.forEach((d,i)=>{
+      const anchor = mind.addAnchor(i);
+      const slot = makeSlot(i, anchor);
+      anchor.onTargetFound = () => { slot.visible=true; slot.pop=0; show(slot); };
+      anchor.onTargetLost  = () => { slot.visible=false; if(current===slot) hide(); };
+    });
+    await mind.start();
+    $('start').hidden=true; $('scan').hidden=false;
+    renderer.setAnimationLoop(()=>{
+      const dt=Math.min(clock.getDelta(),.05), t=clock.elapsedTime;
+      for(const s of slots) if(s && s.visible) animate(s,dt,t);
+      renderer.render(scene,camera);
+    });
+    window.__arReady = true;
+  }catch(e){
+    console.error(e);
+    $('go').disabled=false; $('go').textContent='Prøv igjen';
+    $('err').hidden=false;
+    $('err').textContent = (e && /Permission|NotAllowed/i.test(e.name+e.message))
+      ? 'Kameraet fikk ikke lov. Gå til Innstillinger → Safari → Kamera og velg «Tillat», og prøv igjen.'
+      : location.protocol!=='https:' && location.hostname!=='localhost' && location.hostname!=='127.0.0.1'
+        ? 'Kameraet virker bare når siden åpnes fra nett (https), for eksempel GitHub Pages.'
+        : 'Noe gikk galt da kameraet skulle starte. Last siden på nytt og prøv igjen.';
+  }
+}
+$('go').addEventListener('click', start);
+document.addEventListener('visibilitychange',()=>{ if(document.hidden && actx) actx.suspend(); else if(actx) actx.resume(); });
+</script>
+</body>
+</html>

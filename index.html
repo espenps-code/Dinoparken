@@ -199,6 +199,30 @@
   .factbox h4{font:700 16px Fredoka,sans-serif;margin:0 0 6px}
   .factbox p{margin:0 0 8px;line-height:1.45}
   .factbox button{background:none;border:0;padding:0;color:#2f6b3a;text-decoration:underline;font:600 14px Fredoka,sans-serif;cursor:pointer}
+  .sect{font:600 13px Fredoka,sans-serif;text-transform:uppercase;letter-spacing:.06em;color:#6b7a70;margin:10px 0 6px}
+  .res{display:flex;align-items:center;gap:10px;background:#f4f1e6;border-radius:14px;padding:8px 10px;margin-bottom:6px}
+  .res img{width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid var(--ink);flex:none}
+  .res .rt{flex:1;min-width:0}
+  .res b{font:600 16px Fredoka,sans-serif;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .res small{font-size:13px;color:#4a6656}
+  .res .mini{height:8px;border-radius:99px;background:#e2dccb;margin-top:4px;overflow:hidden}
+  .res .mini i{display:block;height:100%;background:#9fd46b}
+  .nameRow{display:flex;gap:6px;margin-top:4px}
+  .nameRow input{flex:1;min-width:0;font:600 15px Fredoka,sans-serif;padding:5px 9px;border:2px solid var(--ink);border-radius:10px;background:#fff;color:var(--ink)}
+  .nameRow button{border:2px solid var(--ink);background:#f2a33a;border-radius:10px;font:600 14px Fredoka,sans-serif;padding:4px 10px;cursor:pointer;color:var(--ink)}
+  .eggbox{display:flex;gap:12px;align-items:center;background:#fff7e3;border:2px dashed #d9b46a;border-radius:16px;padding:10px 12px}
+  .eggbox.ready{border-style:solid;border-color:#e0782f;background:#fff0d6}
+  .eggico{width:40px;height:50px;flex:none;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;border:3px solid var(--ink);background:radial-gradient(circle at 35% 30%,#fffbe8,#f2d27a)}
+  .eggbox.ready .eggico{animation:wob .5s ease-in-out infinite}
+  @keyframes wob{25%{transform:rotate(-9deg)}75%{transform:rotate(9deg)}}
+  .eggbox .et{flex:1}
+  .eggbox p{margin:0 0 4px;font-size:15px;line-height:1.35}
+  .heat{display:flex;gap:4px}
+  .heat i{flex:1;height:10px;border-radius:99px;background:#e9e4d6;border:1.5px solid var(--ink)}
+  .heat i.on{background:#e8604c}
+  .moon{font-weight:700;color:#3f5fa0}
+  .hatchBtn{margin-top:8px!important;padding:10px!important}
+  .tag.ready{animation:glow 1.2s ease-in-out infinite}
   #loading{position:fixed;inset:0;display:grid;place-items:center;font:600 22px Fredoka,sans-serif;z-index:10;background:inherit;transition:opacity .5s}
   #loading.gone{opacity:0;pointer-events:none}
 </style>
@@ -223,6 +247,7 @@
   <button class="navbtn" id="libBtn"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4.5A2.5 2.5 0 016.5 2H20v17H6.5A2.5 2.5 0 004 21.5z" fill="#3f86c9" stroke="#1f3b2c" stroke-width="2"/><path d="M4 21.5A2.5 2.5 0 016.5 19H20v3H6.5A2.5 2.5 0 014 21.5z" fill="#fff" stroke="#1f3b2c" stroke-width="2"/></svg><span class="long">Dinobiblioteket</span><span class="short">Bibliotek</span></button>
   <button class="navbtn" id="quizBtn"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#f2a33a" stroke="#1f3b2c" stroke-width="2"/><path d="M9.2 9.3a2.9 2.9 0 015.6 1c0 2-2.8 2.4-2.8 4.2" fill="none" stroke="#1f3b2c" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17.6" r="1.3" fill="#1f3b2c"/></svg><span class="long">Ukens dinoquiz</span><span class="short">Quiz</span><span class="dot" id="quizDot" hidden></span></button>
   <button class="navbtn" id="tlBtn"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="#9fd46b" stroke="#1f3b2c" stroke-width="2"/><path d="M12 6.5V12l3.5 2.5" fill="none" stroke="#1f3b2c" stroke-width="2.2" stroke-linecap="round"/></svg><span class="long">Tidslinjen</span><span class="short">Tidslinje</span></button>
+  <a class="navbtn" href="ar.html" style="text-decoration:none"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6.5" width="19" height="13" rx="3" fill="#3f86c9" stroke="#1f3b2c" stroke-width="2"/><path d="M8.5 6.5l1.5-2.5h4l1.5 2.5" fill="#3f86c9" stroke="#1f3b2c" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.6" fill="#fff" stroke="#1f3b2c" stroke-width="2"/></svg><span class="long">AR-kort</span><span class="short">AR</span></a>
 </div>
 <div class="overlay" id="tl" hidden role="dialog" aria-modal="true" aria-label="Tidslinjen">
   <div class="sheet tlsheet">
@@ -279,6 +304,8 @@
     <div id="aMenu" hidden>
       <h2>Voksenmeny</h2>
       <p>Mynter nå: <b id="aCoins">0</b> · Områder eid: <b id="aOwned">1</b> av 6</p>
+      <button class="btn back" id="aNight">Hopp over natten (egg kan klekkes nå)</button>
+      <p class="small" id="aNightFb" style="margin:6px 0 0"></p>
       <button class="btn danger" id="aReset">Start parken på nytt</button>
     </div>
     <div id="aConfirm" hidden>
@@ -297,15 +324,13 @@
   <p id="pFact"></p>
   <button class="linkbtn" id="pLib">Les mer i Dinobiblioteket</button>
   <div id="ownedBox">
-    <div class="eggs" id="pEggs"></div>
-    <p class="small" id="pProg">0 av 5 egg samlet</p>
+    <div id="nursery"></div>
     <div class="task" id="task">
       <div class="tlabel">Prøveoppdrag (plassholder)</div>
       <div class="q" id="tQ"></div>
       <div class="row"><input id="tA" inputmode="numeric" autocomplete="off" aria-label="Ditt svar"><button class="btn go" id="tGo">Sjekk</button></div>
       <div class="fb" id="tFb"></div>
     </div>
-    <p class="done" id="tDone" hidden>Alle 5 egg er samlet. Bra jobba!</p>
   </div>
   <div id="lockedBox">
     <div class="price"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="11" fill="#f2c230" stroke="#1f3b2c" stroke-width="2.5"/><circle cx="13" cy="13" r="6.5" fill="none" stroke="#b8740f" stroke-width="2"/></svg><span id="lPrice">0</span> mynter</div>
@@ -330,15 +355,20 @@ const CONFIG = {
   ticket: 0,          // mynter per besøkende (0 = besøkende er bare pynt, mynter kommer kun fra oppdrag)
   visitorEvery: 8,    // sekunder mellom hver besøkende med ÉN innhegning (flere innhegninger = oftere)
   taskReward: 10,     // mynter per riktig oppdrag
-  eggBonus: 25,       // bonus når alle 5 egg i en innhegning er samlet
+  eggWarm: 4,         // riktige oppdrag som trengs for å varme et egg (i tillegg må egget ligge én natt)
+  grow: [3, 5],       // riktige oppdrag for å vokse: unge → ungdom, ungdom → voksen
   maxVisitors: 24,    // maks antall besøkende i parken samtidig
   quizReward: 5,      // mynter per riktig svar i ukens dinoquiz (bare første forsøk hver uke)
   adultPin: '1234',   // kode for voksenmenyen – bytt til din egen
 };
-const PRICES = { 1:0, 2:40, 3:80, 4:120, 5:180, 6:250 };
+const PRICES = { 1:0, 2:30, 3:50, 4:70, 5:90, 6:120 };      // pris for tomtene
+const EGG_PRICES = { 1:20, 2:30, 3:40, 4:25, 5:30, 6:25 };  // pris per egg i hver innhegning
 const WHO = { 1:'to triceratopser', 2:'to brachiosauruser', 3:'en T-rex', 4:'tre raptorer', 5:'tre pteranodoner', 6:'to stegosauruser' };
-const SAVE_KEY = 'dinoparken-v4';  // samme lagring som før, så framgangen beholdes
-let state = { coins:CONFIG.startCoins, owned:[1], eggs:{} };
+const SAVE_KEY = 'dinoparken-v8';
+const dayStr = (d=new Date()) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const yesterday = () => { const d=new Date(); d.setDate(d.getDate()-1); return dayStr(d); };
+// Start: Triceratops-enga eies, og det første egget er nesten klart (rask første klekking)
+let state = { coins:CONFIG.startCoins, owned:[1], dinos:{}, eggs:{ 1:{ warm:CONFIG.eggWarm-1, day:yesterday() } } };
 try { const raw = localStorage.getItem(SAVE_KEY); if(raw) state = Object.assign(state, JSON.parse(raw)); } catch(e){}
 const save = () => { try { localStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch(e){} };
 
@@ -688,7 +718,6 @@ function decorate(e){
     add(g,G.ico,0xfff3dc,bx-.7,.15,bz,.2,.2,.2); add(g,G.ico,0xfff3dc,bx+.7,.15,bz,.2,.2,.2); }
   if(e.id===4){ const [nx,nz]=at(e,back,.5), nest=new THREE.Group(); nest.position.set(nx,0,nz); g.add(nest);
     add(nest,new THREE.TorusGeometry(1,.35,5,8),0x8a6a3e,0,.25,0).rotation.x=PI/2;
-    for(const [ex,ez] of [[-.3,.1],[.3,.2],[0,-.35]]) add(nest,G.ico,0xf6efd8,ex,.35,ez,.24,.32,.24);
     rim(e,[(x,z)=>rock(x,z,1.1,g),(x,z)=>bush(x,z,1,g,0x8aa14a),(x,z)=>rock(x,z,.8,g),(x,z)=>bush(x,z,.8,g,0x8aa14a)],.85); }
   if(e.id===5){ add(g,G.dod,0x9a948c,0,.8,0,1.4,1.6,1.4); add(g,G.dod,0xa8a29a,.3,2.2,.2,.9,1,.9); add(g,G.cyl,0x7cc35a,.3,2.95,.2,.7,.12,.7);
     const dome=new THREE.Mesh(new THREE.IcosahedronGeometry(6.4,1),new THREE.MeshBasicMaterial({color:0xffffff,wireframe:true,transparent:true,opacity:.55}));
@@ -700,6 +729,23 @@ function decorate(e){
     rim(e,[(x,z)=>bush(x,z,1,g,0x4a8f45),(x,z)=>pine(x,z,.8,g),(x,z)=>bush(x,z,.8,g,0x4a8f45),(x,z)=>bush(x,z,1.1,g,0x4a8f45)],.85); }
 }
 
+/* Rugekasse med egg */
+const eggGeo = new THREE.IcosahedronGeometry(1,1);
+function buildIncubator(e){
+  const [lx,lz] = e.id===4 ? at(e,e.gateAng+PI,.5) : at(e,e.gateAng+.75,.42);
+  const g=new THREE.Group(); g.position.set(e.x+lx,0,e.z+lz); e.built.add(g);
+  if(e.id!==4){
+    add(g,G.box,0x9a6a3e,0,.22,0,1.6,.44,1.3);
+    add(g,G.box,0xe9c46a,0,.46,0,1.4,.06,1.1,false);
+    for(let i=0;i<7;i++){ const c=add(g,G.box,0xd9b04f,R(-.6,.6),.5,R(-.45,.45),.5,.03,.04,false); c.rotation.y=R(0,3); }
+  }
+  const egg=new THREE.Mesh(eggGeo,new THREE.MeshStandardMaterial({color:0xf6ecd0,flatShading:true,roughness:.7,emissive:0xffa040,emissiveIntensity:0}));
+  egg.scale.set(.42,.56,.42); egg.position.y=e.id===4?.62:1.02; egg.castShadow=true; g.add(egg);
+  for(let i=0;i<5;i++){ const sp=add(egg,G.ico,new THREE.Color(e.badge).getHex(),0,0,0,.18,.18,.12,false);
+    const a=i/5*6.28+R(0,.6), h=R(-.4,.5); sp.position.set(Math.cos(a)*.86,h,Math.sin(a)*.86); sp.lookAt(0,h,0); }
+  e.inc=g; e.eggMesh=egg; e.eggBaseY=egg.position.y;
+  e.incPos=new THREE.Vector3(e.x+lx,0,e.z+lz);
+}
 /* Gjengrodd tomt til salgs */
 const LOCK_COL = 0xb3b98a;
 const saleTex = textTexture('TIL SALGS',{w:256,h:96,bg:'#c2453a',size:46});
@@ -730,6 +776,7 @@ for(const e of ENCS){
   slab(e.poly,0,.09,e.groundMat);
   e.built=new THREE.Group(); scene.add(e.built);
   buildFence(e,e.built); buildSign(e,e.built); decorate(e);
+  buildIncubator(e);
   e.wild=buildWild(e);
   if(!e.owned){ e.built.visible=false; e.built.position.y=-7; } else e.wild.visible=false;
   const hb=slab(e.poly,0,5,hitMat); hb.receiveShadow=false; hb.userData.enc=e; hitBoxes.push(hb);
@@ -859,12 +906,14 @@ function pickTarget(d){
   for(let i=0;i<40;i++){ const x=e.x+R(-1,1)*e.rx, z=e.z+R(-1,1)*e.rx; if(inPoly(e.walkPoly,x,z)){ u.target={x,z}; return; } }
   u.target={x:e.x,z:e.z};
 }
+const STAGE_K=[.45,.72,1], STAGE_NAME=['Unge','Ungdom','Voksen'];
+function applyStage(d,stage){ const u=d.userData; u.scale=u.base*STAGE_K[stage]; d.scale.setScalar(u.scale); u.grow=null; }
 const allDinos = [];
 for(const e of ENCS){
   e.dinos.forEach(([kind,scale],i) => {
     const b = BUILD[kind]();
     const d = b.g; d.scale.setScalar(scale); scene.add(d);
-    d.userData = { ...b, enc:e, scale, seed:R(0,10), phase:0, wait:R(0,2) };
+    d.userData = { ...b, enc:e, scale, base:scale, slot:i, seed:R(0,10), phase:0, wait:R(0,2) };
     delete d.userData.g;
     if(b.flyer){
       Object.assign(d.userData, { ang:R(0,6.28), r:R(2.2,4), h:R(3,4.8), dir:i%2?-1:1, angSpeed:R(.45,.7) });
@@ -874,7 +923,8 @@ for(const e of ENCS){
       d.userData.yaw = R(0,6.28); d.userData.neckBase = b.neck ? b.neck.rotation.x : 0;
       pickTarget(d); e.walkers.push(d);
     }
-    if(!e.owned) d.visible=false;
+    const info=(state.dinos[e.id]||[])[i];
+    d.visible=!!info; if(info) applyStage(d,info.stage);
     allDinos.push(d);
   });
 }
@@ -907,7 +957,7 @@ function updateWalker(d,dt,t){
   if(u.neck) u.neck.rotation.x=u.neckBase+Math.sin(t*1.3+u.seed)*(walking?.04:.1);
 }
 function separate(e,dt){
-  const ws=e.walkers;
+  const ws=e.walkers.filter(d=>d.visible);
   for(let i=0;i<ws.length;i++) for(let j=i+1;j<ws.length;j++){
     const a=ws[i], b=ws[j], dx=b.position.x-a.position.x, dz=b.position.z-a.position.z, dist=Math.hypot(dx,dz)||.01;
     const min=(a.userData.scale+b.userData.scale)*(e.id===2?2.2:1.4);
@@ -921,7 +971,7 @@ function updateFlyer(d,dt,t){
   const u=d.userData, e=u.enc;
   if(u.dropY) u.dropY=Math.max(0,u.dropY-dt*8);
   u.ang+=dt*u.angSpeed*u.dir;
-  d.position.set(e.x+Math.cos(u.ang)*u.r, u.h+Math.sin(t*.8+u.seed)*.6+(u.dropY||0), e.z+Math.sin(u.ang)*u.r);
+  d.position.set(e.x+Math.cos(u.ang)*u.r, u.h*(.55+.45*u.scale/u.base)+Math.sin(t*.8+u.seed)*.6+(u.dropY||0), e.z+Math.sin(u.ang)*u.r);
   const vx=-Math.sin(u.ang)*u.dir, vz=Math.cos(u.ang)*u.dir;
   d.rotation.set(0,Math.atan2(vx,vz),-.3*u.dir);
   const flap=Math.sin(t*5+u.seed)*.5*(.35+.65*Math.max(0,Math.sin(t*.6+u.seed)));
@@ -943,6 +993,7 @@ function updateTag(e){
   const t=e.tag;
   t.classList.toggle('locked',!e.owned);
   t.classList.toggle('can',!e.owned && state.coins>=e.price);
+  t.classList.toggle('ready',!!e.owned && eggReady(e));
   t.innerHTML = e.owned ? `<b>${e.id}</b><span>${e.name}</span>` : `<b>${LOCK_SVG}</b><span>Til salgs · ${e.price}</span>`;
   t.setAttribute('aria-label', e.owned ? `Innhegning ${e.id}: ${e.name}` : `Tomt til salgs for ${e.price} mynter`);
 }
@@ -993,13 +1044,96 @@ canvas.addEventListener('pointerup',ev=>{
 });
 
 const panel=document.getElementById('panel');
-const pEggs=document.getElementById('pEggs');
-for(let i=0;i<5;i++){ const s=document.createElement('span'); s.className='egg'; pEggs.appendChild(s); }
 const $=id=>document.getElementById(id);
 let task=null;
 function newTask(){
   const a=2+Math.floor(Math.random()*8), b=2+Math.floor(Math.random()*8);
   task={a:a*b}; $('tQ').textContent=`${a} × ${b} = ?`; $('tA').value='';
+}
+/* ---------- Egg og unger ---------- */
+const hatched = e => state.dinos[e.id] || (state.dinos[e.id]=[]);
+const freeSlots = e => e.dinos.length - hatched(e).length - (state.eggs[e.id]?1:0);
+const eggWarm = e => { const g=state.eggs[e.id]; return !!g && g.warm>=CONFIG.eggWarm; };
+function eggReady(e){ const g=state.eggs[e.id]; return !!g && g.warm>=CONFIG.eggWarm && dayStr()>g.day; }
+const speciesOf = e => dinoById(PARK_DINO[e.id]);
+const dinoName = (e,i) => (hatched(e)[i]||{}).name || `${speciesOf(e).navn.replace(' rex','')}-unge`;
+function buyEgg(e){
+  const p=EGG_PRICES[e.id];
+  if(!e.owned || state.eggs[e.id] || freeSlots(e)<=0 || state.coins<p) return;
+  state.coins-=p; state.eggs[e.id]={ warm:0, day:dayStr() }; save();
+  floatText(`−${p}`,e.incPos.clone().setY(2)); updateHud(true); refreshPanel();
+}
+function hatch(e){
+  if(!eggReady(e) || e.hatchAnim) return;
+  e.hatchAnim={ start:performance.now() };
+  $('nursery').querySelector('.hatchBtn').disabled=true;
+}
+function finishHatch(e){
+  const list=hatched(e), slot=list.length;
+  list.push({ stage:0, xp:0, name:'' }); delete state.eggs[e.id]; save();
+  const d=allDinos.find(x=>x.userData.enc===e && x.userData.slot===slot);
+  if(d){ applyStage(d,0); d.visible=true; d.position.set(e.incPos.x,0,e.incPos.z);
+    if(d.userData.flyer) d.userData.dropY=0; d.userData.pop=0; d.userData.wait=1.5; }
+  burst(e.incPos.x,e.incPos.z); e.justHatched=slot; refreshPanel(); updateHud(false);
+}
+function animEgg(e,dt,t){
+  const g=state.eggs[e.id], m=e.eggMesh;
+  if(e.hatchAnim){
+    const h=e.hatchAnim; h.t=(performance.now()-h.start)/1000;
+    m.visible=true; m.rotation.z=Math.sin(t*30)*.35*Math.min(1,h.t*2); m.position.y=e.eggBaseY+Math.abs(Math.sin(t*15))*.15;
+    m.material.emissiveIntensity=.2+h.t*.6;
+    if(h.t>1.3){ m.visible=false; m.rotation.z=0; m.position.y=e.eggBaseY; e.hatchAnim=null; finishHatch(e); }
+    return;
+  }
+  m.visible=!!g; if(!g) return;
+  const k=Math.min(1,g.warm/CONFIG.eggWarm);
+  m.rotation.z=Math.sin(t*(2+k*6))*.05*k + (eggReady(e)? Math.sin(t*14)*.12*Math.max(0,Math.sin(t*1.6)) : 0);
+  m.material.emissiveIntensity = k*.25 + (eggWarm(e)? .12+.1*Math.sin(t*3) : 0);
+}
+function renderNursery(e){
+  const list=hatched(e), sp=speciesOf(e), img=DINO_IMG[sp.id];
+  let h='';
+  if(list.length){
+    h+=`<div class="sect">Bor her (${list.length} av ${e.dinos.length})</div>`;
+    list.forEach((x,i)=>{
+      const need=CONFIG.grow[x.stage], pct= x.stage>=2 ? 100 : Math.round(x.xp/need*100);
+      const named=!!x.name;
+      h+=`<div class="res"><img src="${img}" alt="">
+        <div class="rt"><b>${esc(dinoName(e,i))}</b>
+        <small>${STAGE_NAME[x.stage]}${x.stage<2?` · ${x.xp} av ${need} oppdrag til den vokser`:' · fullvoksen!'}</small>
+        ${x.stage<2?`<div class="mini"><i style="width:${pct}%"></i></div>`:''}
+        ${named?'':`<div class="nameRow"><input data-i="${i}" maxlength="18" placeholder="Gi ungen et navn" aria-label="Navn på ungen"><button data-i="${i}">Lagre</button></div>`}
+        </div></div>`;
+    });
+  }
+  const g=state.eggs[e.id], p=EGG_PRICES[e.id];
+  h+=`<div class="sect">Rugekassa</div>`;
+  if(g){
+    const heat=Array.from({length:CONFIG.eggWarm},(_,i)=>`<i class="${i<g.warm?'on':''}"></i>`).join('');
+    if(eggReady(e)) h+=`<div class="eggbox ready"><span class="eggico"></span><div class="et"><p><b>Egget er klart!</b> Det har fått nok varme og ligget over natten.</p>
+        <button class="btn go hatchBtn">Klekk egget!</button></div></div>`;
+    else if(eggWarm(e)) h+=`<div class="eggbox"><span class="eggico"></span><div class="et"><p><b>Egget er varmt nok!</b></p><div class="heat">${heat}</div>
+        <p class="moon" style="margin-top:6px">Nå må det ligge over natten. Kom tilbake i morgen!</p></div></div>`;
+    else h+=`<div class="eggbox"><span class="eggico"></span><div class="et"><p>Varm opp egget ved å løse oppdrag: <b>${g.warm} av ${CONFIG.eggWarm}</b></p><div class="heat">${heat}</div>
+        <p class="small" style="margin:6px 0 0">Etterpå må egget ligge én natt før det klekkes.</p></div></div>`;
+  } else if(freeSlots(e)>0){
+    const miss=p-state.coins;
+    h+=`<div class="eggbox"><span class="eggico" style="opacity:.45"></span><div class="et"><p>Rugekassa er tom. Det er plass til ${freeSlots(e)} ${freeSlots(e)===1?'egg':'egg'} til.</p>
+      <button class="btn go" id="buyEgg" ${miss>0?'disabled':''}>${miss>0?`Egg koster ${p} – du mangler ${miss}`:`Kjøp egg for ${p} mynter`}</button></div></div>`;
+  } else h+=`<p class="done">Innhegningen er full – alle ${e.dinos.length} plassene er tatt!</p>`;
+  $('nursery').innerHTML=h;
+}
+$('nursery').addEventListener('click',ev=>{
+  const e=current; if(!e) return;
+  if(ev.target.id==='buyEgg') buyEgg(e);
+  else if(ev.target.classList.contains('hatchBtn')) hatch(e);
+  else if(ev.target.matches('.nameRow button')){ saveName(e,+ev.target.dataset.i); }
+});
+$('nursery').addEventListener('keydown',ev=>{ if(ev.key==='Enter' && ev.target.matches('.nameRow input')) saveName(current,+ev.target.dataset.i); });
+function saveName(e,i){
+  const inp=$('nursery').querySelector(`.nameRow input[data-i="${i}"]`); const v=(inp&&inp.value||'').trim();
+  if(!v){ inp&&inp.focus(); return; }
+  hatched(e)[i].name=v.slice(0,18); save(); refreshPanel();
 }
 function refreshPanel(){
   const e=current; if(!e) return;
@@ -1009,12 +1143,10 @@ function refreshPanel(){
   $('ownedBox').hidden=!e.owned; $('lockedBox').hidden=e.owned; $('pLib').hidden=!e.owned;
   if(e.owned){
     $('pFact').textContent=e.fact;
-    const n=state.eggs[e.id]||0;
-    [...pEggs.children].forEach((el,i)=>el.classList.toggle('full',i<n));
-    $('pProg').textContent=`${n} av 5 egg samlet`;
-    $('task').hidden=n>=5; $('tDone').hidden=n<5;
+    renderNursery(e);
+    if(e.justHatched!==undefined){ const inp=$('nursery').querySelector(`.nameRow input[data-i="${e.justHatched}"]`); delete e.justHatched; if(inp) setTimeout(()=>inp.focus(),60); }
   } else {
-    $('pFact').textContent=`Her kan ${WHO[e.id]} flytte inn i ${e.name}! Kjøp tomten for å bygge innhegningen.`;
+    $('pFact').textContent=`Her kan ${WHO[e.id]} flytte inn i ${e.name}! Kjøp tomten først – så kan du kjøpe egg og klekke dem.`;
     $('lPrice').textContent=e.price;
     $('lBar').style.width=Math.min(100,state.coins/e.price*100)+'%';
     const miss=e.price-state.coins, btn=$('buyBtn');
@@ -1029,16 +1161,36 @@ function openEnc(e){
   panel.classList.add('open');
   focusOn(e.x,e.z,2.1);
 }
+/* Riktig svar: mynter + varme til egget, eller vekst til en unge */
+function progress(e){
+  const g=state.eggs[e.id];
+  if(g && g.warm<CONFIG.eggWarm){
+    g.warm++;
+    return g.warm>=CONFIG.eggWarm ? (dayStr()>g.day ? 'Egget er klart til å klekkes!' : 'Egget er varmt nok – nå må det ligge over natten!') : `Egget ble varmere (${g.warm} av ${CONFIG.eggWarm}).`;
+  }
+  const list=hatched(e);
+  let idx=-1; list.forEach((x,i)=>{ if(x.stage<2 && (idx<0 || x.stage<list[idx].stage)) idx=i; });
+  if(idx>=0){
+    const x=list[idx]; x.xp++;
+    if(x.xp>=CONFIG.grow[x.stage]){
+      x.stage++; x.xp=0;
+      const d=allDinos.find(y=>y.userData.enc===e && y.userData.slot===idx);
+      if(d){ const u=d.userData, from=u.scale; u.scale=u.base*STAGE_K[x.stage]; u.grow={ t:0, from, to:u.scale }; }
+      burst(e.incPos.x,e.incPos.z);
+      return `${dinoName(e,idx)} vokste og er nå ${STAGE_NAME[x.stage].toLowerCase()}!`;
+    }
+    return `${dinoName(e,idx)} vokser (${x.xp} av ${CONFIG.grow[x.stage]}).`;
+  }
+  return '';
+}
 function checkTask(){
   const e=current; if(!e||!e.owned||!task) return;
   const v=$('tA').value.trim(); if(v==='') return;
   const fb=$('tFb');
   if(Number(v)===task.a){
-    state.eggs[e.id]=(state.eggs[e.id]||0)+1;
-    let gain=CONFIG.taskReward;
-    if(state.eggs[e.id]===5) gain+=CONFIG.eggBonus;
-    earn(gain,new THREE.Vector3(e.x,3,e.z));
-    fb.className='fb ok'; fb.textContent= state.eggs[e.id]===5 ? `Riktig! +${gain} mynter med bonus!` : `Riktig! +${CONFIG.taskReward} mynter`;
+    const extra=progress(e);
+    earn(CONFIG.taskReward,new THREE.Vector3(e.x,3,e.z));
+    fb.className='fb ok'; fb.textContent=`Riktig! +${CONFIG.taskReward} mynter. ${extra}`;
     newTask(); refreshPanel();
   } else { fb.className='fb no'; fb.textContent='Ikke helt – prøv igjen!'; $('tA').select(); }
 }
@@ -1053,7 +1205,7 @@ function updateHud(bump){
   $('rate').textContent= CONFIG.ticket>0 ? `≈ ${Math.round(60/(CONFIG.visitorEvery/n)*CONFIG.ticket)} mynter i minuttet fra besøkende` : 'Løs oppdrag for å tjene mynter';
   if(bump){ const c=$('coinBox'); c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump'); }
   ENCS.forEach(updateTag);
-  if(current && !current.owned) refreshPanel();
+  if(current && !current.hatchAnim) refreshPanel();
 }
 function floatText(txt,world){
   v3.copy(world).project(camera);
@@ -1067,7 +1219,6 @@ function unlock(e){
   state.coins-=e.price; state.owned.push(e.id); save();
   e.owned=true; e.anim={t:0};
   e.built.visible=true; e.built.position.y=-7;
-  for(const d of [...e.walkers,...e.flyers]){ d.visible=true; d.userData.dropY=9+R(0,4); }
   burst(e.x,e.z); updateHud(true); refreshPanel(); newTask();
 }
 /* Voksenmeny (bak kode) */
@@ -1084,6 +1235,10 @@ $('adult').addEventListener('click',ev=>{ if(ev.target.id==='adult') closeAdult(
 $('pinGo').addEventListener('click',tryPin);
 $('pinIn').addEventListener('keydown',ev=>{ if(ev.key==='Enter') tryPin(); });
 $('aReset').addEventListener('click',()=>adultView('aConfirm'));
+$('aNight').addEventListener('click',()=>{
+  let n=0; for(const k in state.eggs){ state.eggs[k].day=yesterday(); n++; } save(); updateHud(false);
+  $('aNightFb').textContent = n ? `${n} egg har nå ligget over natten.` : 'Ingen egg ligger i rugekassene nå.';
+});
 $('aNo').addEventListener('click',()=>adultView('aMenu'));
 $('aYes').addEventListener('click',()=>{ try{localStorage.removeItem(SAVE_KEY);}catch(e){} location.reload(); });
 
@@ -1215,7 +1370,8 @@ function showDino(id){
     : `${d.flyger?'Vingene var':'Den var'} like ${d.flyger?'brede':'lang'} som ca. ${n} elever som ligger etter hverandre.`;
   let parkTxt='';
   if(d.park){ const e=ENCS.find(x=>x.id===d.park);
-    parkTxt=`<p class="parknote">${e.owned?`Bor i parken din: <b>${esc(e.name)}</b>`:`Kan flytte inn i <b>${esc(e.name)}</b> – tomten er til salgs`}</p>`; }
+    const nb=(state.dinos[e.id]||[]).length;
+    parkTxt=`<p class="parknote">${nb?`Bor i parken din: <b>${nb}</b> i ${esc(e.name)}`:e.owned?`Kjøp et egg i <b>${esc(e.name)}</b> for å klekke en!`:`Kan flytte inn i <b>${esc(e.name)}</b> – tomten er til salgs`}</p>`; }
   $('libDetail').innerHTML=`
     <button class="libBack" id="libBack">← Alle dyrene</button>
     <div class="dtop">
@@ -1550,7 +1706,9 @@ let first=true;
 updateHud(false);
 renderer.setAnimationLoop(()=>{
   const dt=Math.min(clock.getDelta(),.05), t=clock.elapsedTime;
-  for(const e of ENCS){ if(!e.owned) continue; e.walkers.forEach(d=>updateWalker(d,dt,t)); separate(e,dt); e.flyers.forEach(d=>updateFlyer(d,dt,t)); }
+  for(const e of ENCS){ if(!e.owned) continue; e.walkers.forEach(d=>d.visible&&updateWalker(d,dt,t)); separate(e,dt); e.flyers.forEach(d=>d.visible&&updateFlyer(d,dt,t)); animEgg(e,dt,t); }
+  for(const d of allDinos){ const u=d.userData; if(u.pop!==undefined){ u.pop=Math.min(1,u.pop+dt*2.2); const k=u.pop<1? (1-Math.pow(1-u.pop,3))*(1+.25*Math.sin(u.pop*PI)) : 1; d.scale.setScalar(u.scale*k); if(u.pop>=1) delete u.pop; }
+    if(u.grow){ u.grow.t=Math.min(1,u.grow.t+dt*1.5); const k=u.grow.from+(u.grow.to-u.grow.from)*(1-Math.pow(1-u.grow.t,3)); d.scale.setScalar(k*(1+.12*Math.sin(u.grow.t*PI*3)*(1-u.grow.t))); if(u.grow.t>=1){ d.scale.setScalar(u.grow.to); u.grow=null; } } }
   for(const f of foam){ const q=f.userData; q.u+=q.v*dt; if(q.u>.995){ q.u=0; q.off=R(-1.3,1.3); }
     const p=river.getPointAt(q.u), n=riverPerp(q.u); f.position.set(p.x+n.x*q.off,.16,p.z+n.z*q.off); f.rotation.y=Math.atan2(n.x,n.z)+PI/2; }
   for(const s of fallStreaks){ s.position.y-=s.userData.v*dt; if(s.position.y<-4.6) s.position.y=0; }
