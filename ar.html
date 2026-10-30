@@ -103,6 +103,7 @@
 <script type="module">
 import * as THREE from 'three';
 import { MindARThree } from 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 const DINOS = [{"id": "triceratops", "navn": "Triceratops", "betyr": "«Ansikt med tre horn»", "periode": "Kritt", "tid": "68–66 millioner år siden", "sted": "Nord-Amerika", "lengde": 9, "lengdeTxt": "ca. 9 meter", "vekt": 9000, "vektTxt": "6–12 tonn", "mat": "Planter", "park": 1, "tekst": "Triceratops var en stor planteeter med tre horn og et stort beinskjold rundt nakken. De to største hornene kunne bli over én meter lange. Den levde helt på slutten av dinosaurenes tid, samtidig med T-rex – og forskere har funnet triceratops-bein med bitemerker fra T-rex!"}, {"id": "brachiosaurus", "navn": "Brachiosaurus", "betyr": "«Arm-øgle»", "periode": "Jura", "tid": "154–150 millioner år siden", "sted": "Nord-Amerika", "lengde": 22, "lengdeTxt": "ca. 22 meter", "vekt": 40000, "vektTxt": "30–45 tonn", "mat": "Planter", "park": 2, "tekst": "Brachiosaurus hadde lengre forbein enn bakbein, så ryggen skrånet bakover – litt som på en sjiraff. Med halsen strakt opp nådde den kanskje 12–13 meter opp i trærne. Den måtte spise enorme mengder planter hver eneste dag."}, {"id": "tyrannosaurus", "navn": "Tyrannosaurus rex", "betyr": "«Tyrann-øglekongen»", "periode": "Kritt", "tid": "68–66 millioner år siden", "sted": "Nord-Amerika", "lengde": 12, "lengdeTxt": "ca. 12 meter", "vekt": 8000, "vektTxt": "ca. 8 tonn", "mat": "Kjøtt", "park": 3, "tekst": "T-rex er et av de største kjøttetende dyrene som har levd på land. Kjevene var så kraftige at den kunne knuse bein. Armene var bare rundt én meter lange og hadde to fingre hver. Forskere tror den hadde svært god luktesans."}, {"id": "velociraptor", "navn": "Velociraptor", "betyr": "«Rask røver»", "periode": "Kritt", "tid": "75–71 millioner år siden", "sted": "Asia (Mongolia og Kina)", "lengde": 2, "lengdeTxt": "ca. 2 meter", "vekt": 15, "vektTxt": "ca. 15 kg", "mat": "Kjøtt", "park": 4, "tekst": "Velociraptor var mye mindre enn i filmene – omtrent like stor som en kalkun. Den hadde fjær, og på hver fot hadde den en krum klo som var rundt 6–7 centimeter lang. Et berømt fossil viser en velociraptor som slåss med en planteeter kalt protoceratops."}, {"id": "pteranodon", "navn": "Pteranodon", "betyr": "«Vinge uten tann»", "periode": "Kritt", "tid": "86–84 millioner år siden", "sted": "Nord-Amerika", "lengde": 6.5, "lengdeTxt": "Vingespenn 6–7 meter", "vekt": 35, "vektTxt": "20–50 kg", "mat": "Fisk", "park": 5, "tekst": "Pteranodon var ikke en dinosaur, men en flygeøgle – en slektning av dinosaurene som levde samtidig. Den hadde ingen tenner og fanget fisk i havet, litt som en pelikan. Den lange kammen bakover på hodet var kanskje til for å vise seg fram.", "flyger": true}, {"id": "stegosaurus", "navn": "Stegosaurus", "betyr": "«Tak-øgle»", "periode": "Jura", "tid": "155–150 millioner år siden", "sted": "Nord-Amerika og Portugal", "lengde": 9, "lengdeTxt": "ca. 9 meter", "vekt": 5000, "vektTxt": "ca. 5 tonn", "mat": "Planter", "park": 6, "tekst": "Stegosaurus hadde store plater langs ryggen og fire pigger på halen. Piggene brukte den nok til å forsvare seg mot rovdyr som allosaurus. Hjernen var bitteliten – omtrent som en valnøtt – sammenlignet med den store kroppen."}, {"id": "ankylosaurus", "navn": "Ankylosaurus", "betyr": "«Sammenvokst øgle»", "periode": "Kritt", "tid": "68–66 millioner år siden", "sted": "Nord-Amerika", "lengde": 7, "lengdeTxt": "6–8 meter", "vekt": 6000, "vektTxt": "5–8 tonn", "mat": "Planter", "tekst": "Ankylosaurus var bygget som en stridsvogn. Ryggen var dekket av beinplater, og til og med øyelokkene hadde beinpanser. Bakerst på halen hadde den en tung beinkølle som den kunne svinge mot fiender."}, {"id": "spinosaurus", "navn": "Spinosaurus", "betyr": "«Pigg-øgle»", "periode": "Kritt", "tid": "99–93 millioner år siden", "sted": "Nord-Afrika (Egypt og Marokko)", "lengde": 14, "lengdeTxt": "ca. 14 meter", "vekt": 7000, "vektTxt": "ca. 7 tonn", "mat": "Fisk", "tekst": "Spinosaurus kan ha vært det lengste kjøttetende dyret som har levd på land – enda lengre enn T-rex. Den hadde et stort seil på ryggen og en lang snute som en krokodille. Forskere tror den tilbrakte mye tid i vann og spiste mest fisk."}, {"id": "diplodocus", "navn": "Diplodocus", "betyr": "«Dobbel bjelke»", "periode": "Jura", "tid": "154–152 millioner år siden", "sted": "Nord-Amerika", "lengde": 26, "lengdeTxt": "ca. 26 meter", "vekt": 13000, "vektTxt": "12–15 tonn", "mat": "Planter", "tekst": "Diplodocus var en av de lengste dinosaurene, men ganske slank. Halen var nesten halvparten av hele lengden, og den kunne kanskje smelle med den som en pisk. Tennene satt foran i munnen som en rive, og den brukte dem til å nappe blader."}, {"id": "parasaurolophus", "navn": "Parasaurolophus", "betyr": "«Nesten kam-øgle»", "periode": "Kritt", "tid": "76–74 millioner år siden", "sted": "Nord-Amerika", "lengde": 9.5, "lengdeTxt": "ca. 9,5 meter", "vekt": 2500, "vektTxt": "ca. 2,5 tonn", "mat": "Planter", "tekst": "Parasaurolophus hadde en lang, hul kam bakover på hodet. Luft gikk gjennom kammen, og den kunne lage dype lyder – litt som et horn eller en trombone. Den hadde et nebb som en and og hundrevis av tenner til å male planter."}, {"id": "allosaurus", "navn": "Allosaurus", "betyr": "«Annerledes øgle»", "periode": "Jura", "tid": "155–145 millioner år siden", "sted": "Nord-Amerika og Portugal", "lengde": 8.5, "lengdeTxt": "ca. 8,5 meter", "vekt": 2000, "vektTxt": "ca. 2 tonn", "mat": "Kjøtt", "tekst": "Allosaurus var et av de største rovdyrene i juratiden – mange millioner år før T-rex. Den hadde små horn over øynene og tre fingre med skarpe klør på hver arm. Den jaktet sannsynligvis på planteetere som stegosaurus."}, {"id": "iguanodon", "navn": "Iguanodon", "betyr": "«Leguan-tann»", "periode": "Kritt", "tid": "126–122 millioner år siden", "sted": "Europa (blant annet Belgia og England)", "lengde": 10, "lengdeTxt": "ca. 10 meter", "vekt": 3500, "vektTxt": "3–4 tonn", "mat": "Planter", "tekst": "Iguanodon var en av de aller første dinosaurene som fikk et navn, allerede i 1825. Tennene ligner på tennene til en leguan, derav navnet. På tommelen hadde den en spiss pigg – og den første forskeren trodde at piggen satt på nesen!"}, {"id": "pachycephalosaurus", "navn": "Pachycephalosaurus", "betyr": "«Tykkhodet øgle»", "periode": "Kritt", "tid": "68–66 millioner år siden", "sted": "Nord-Amerika", "lengde": 4.5, "lengdeTxt": "ca. 4,5 meter", "vekt": 450, "vektTxt": "ca. 450 kg", "mat": "Planter", "tekst": "Pachycephalosaurus hadde en hodeskalle som var opptil 25 centimeter tykk! Forskerne er uenige om hva den brukte den til. Kanskje dyttet de til hverandre med hodet, eller kanskje skallen var til for å vise seg fram."}, {"id": "archaeopteryx", "navn": "Archaeopteryx", "betyr": "«Gammel vinge»", "periode": "Jura", "tid": "ca. 150 millioner år siden", "sted": "Europa (Tyskland)", "lengde": 0.5, "lengdeTxt": "ca. 50 centimeter", "vekt": 1, "vektTxt": "under 1 kg", "mat": "Insekter og små dyr", "tekst": "Archaeopteryx var en blanding av dinosaur og fugl. Den hadde fjær og vinger, men også tenner, klør på vingene og en lang beinhale. Den ble funnet i Tyskland i 1861 og hjalp forskerne å forstå at fuglene stammer fra dinosaurene."}, {"id": "compsognathus", "navn": "Compsognathus", "betyr": "«Elegant kjeve»", "periode": "Jura", "tid": "ca. 150 millioner år siden", "sted": "Europa (Tyskland og Frankrike)", "lengde": 1, "lengdeTxt": "ca. 1 meter", "vekt": 3, "vektTxt": "ca. 3 kg", "mat": "Insekter og små dyr", "tekst": "Compsognathus var en av de minste dinosaurene vi kjenner – omtrent som en høne. Den var lett og rask. I magen til et av fossilene fant forskerne restene av en liten øgle som den hadde spist!"}, {"id": "giganotosaurus", "navn": "Giganotosaurus", "betyr": "«Kjempestor sørlig øgle»", "periode": "Kritt", "tid": "99–97 millioner år siden", "sted": "Sør-Amerika (Argentina)", "lengde": 12.5, "lengdeTxt": "12–13 meter", "vekt": 7500, "vektTxt": "7–8 tonn", "mat": "Kjøtt", "tekst": "Giganotosaurus var omtrent like stor som T-rex, kanskje litt lengre. Men de to møttes aldri: Giganotosaurus levde i Sør-Amerika rundt 30 millioner år før T-rex. Hodeskallen var lang og smal, og tennene var flate og skarpe som kniver."}, {"id": "argentinosaurus", "navn": "Argentinosaurus", "betyr": "«Argentina-øgle»", "periode": "Kritt", "tid": "ca. 95 millioner år siden", "sted": "Sør-Amerika (Argentina)", "lengde": 35, "lengdeTxt": "30–35 meter", "vekt": 70000, "vektTxt": "65–75 tonn", "mat": "Planter", "tekst": "Argentinosaurus er blant de største dyrene som noen gang har gått på land. Bare én enkelt ryggvirvel var omtrent like høy som en voksen person! Bare noen få bein er funnet, så forskerne må regne seg fram til hvor stor den var."}, {"id": "dilophosaurus", "navn": "Dilophosaurus", "betyr": "«To-kam-øgle»", "periode": "Jura", "tid": "ca. 190 millioner år siden", "sted": "Nord-Amerika", "lengde": 7, "lengdeTxt": "ca. 7 meter", "vekt": 400, "vektTxt": "ca. 400 kg", "mat": "Kjøtt", "tekst": "Dilophosaurus hadde to tynne kammer på toppen av hodet. I filmen «Jurassic Park» spytter den gift og har en krage rundt halsen, men det finnes ingen bevis for noe av det. I virkeligheten var den mye større enn i filmen – omtrent sju meter lang."}, {"id": "plateosaurus", "navn": "Plateosaurus", "betyr": "«Flat øgle»", "periode": "Trias", "tid": "214–204 millioner år siden", "sted": "Europa (blant annet Tyskland og Sveits)", "lengde": 8, "lengdeTxt": "5–10 meter", "vekt": 2000, "vektTxt": "opptil 4 tonn", "mat": "Planter", "tekst": "Plateosaurus levde i triastiden, lenge før de fleste andre dyrene i biblioteket. Den gikk på to bein og brukte hendene til å gripe tak i greiner. Over hundre skjeletter er funnet, så den er en av de best kjente tidlige dinosaurene."}, {"id": "therizinosaurus", "navn": "Therizinosaurus", "betyr": "«Ljå-øgle»", "periode": "Kritt", "tid": "ca. 70 millioner år siden", "sted": "Asia (Mongolia)", "lengde": 9.5, "lengdeTxt": "9–10 meter", "vekt": 5000, "vektTxt": "ca. 5 tonn", "mat": "Planter", "tekst": "Therizinosaurus hadde de lengste klørne vi kjenner hos noe dyr – over en halv meter lange! Selv om den så skummel ut, spiste den nok mest planter. Klørne brukte den kanskje til å dra greiner nærmere eller til å forsvare seg."}];
 const PI = Math.PI;
@@ -398,6 +399,40 @@ const BUILDERS = {
   allosaurus:buildAllo, iguanodon:buildIguanodon, pachycephalosaurus:buildPachy, archaeopteryx:buildArchae, compsognathus:buildCompso,
   giganotosaurus:buildGiga, argentinosaurus:buildArgentino, dilophosaurus:buildDilo, plateosaurus:buildPlateo, therizinosaurus:buildTheri,
 };
+/* Pene 3D-figurer laget fra bildene (Higgsfield). Dinoer som ikke står her, bruker kode-modellen. */
+const GLB = Object.fromEntries(['triceratops','brachiosaurus','tyrannosaurus','velociraptor','pteranodon','stegosaurus','ankylosaurus',
+  'spinosaurus','diplodocus','parasaurolophus','allosaurus','iguanodon','pachycephalosaurus','archaeopteryx','compsognathus',
+  'giganotosaurus','argentinosaurus','dilophosaurus','plateosaurus','therizinosaurus'].map(id=>[id,`glb/${id}.glb`]));
+const WALK_INSTEAD = { archaeopteryx:true };   // den pene figuren sitter med vingene samlet – den hopper rundt i stedet for å fly
+const gltf = new GLTFLoader();
+function fitModel(slot, g, flyer){
+  const box = new THREE.Box3().setFromObject(g), sz = box.getSize(new THREE.Vector3());
+  slot.s = (flyer ? .55 : .78) / Math.max(sz.x, sz.z, sz.y*.85);
+  g.position.y = flyer ? 0 : -box.min.y;
+  if(!flyer) slot.blob.scale.set(sz.x*.42, sz.z*.36, 1);
+  const visLen = (flyer ? sz.x : Math.max(sz.x,sz.z)) * slot.s;
+  slot.kidH = Math.min(1.6, 1.4 * visLen / slot.d.lengde); slot.kid.scale.setScalar(slot.kidH);
+}
+function loadPretty(slot){
+  const url = GLB[slot.d.id]; if(!url || slot.glbLoading) return;
+  slot.glbLoading = true;
+  const codeModel = slot.b.g;
+  codeModel.visible = false; slot.blob.visible = false;          // skjul kode-dinoen mens den pene lastes
+  const fallback = setTimeout(() => { if(!slot.b.glb){ codeModel.visible = true; slot.blob.visible = true; } }, 5000);
+  gltf.load(url, res => {
+    clearTimeout(fallback);
+    const g = res.scene;
+    g.traverse(o => { if(o.isMesh){ const m=o.material; m.metalness=0; m.roughness=.85; if(m.map) m.map.colorSpace=THREE.SRGBColorSpace; } });
+    const flyer = slot.b.flyer;
+    fitModel(slot, g, flyer);                       // mål figuren før den plasseres på kortet
+    slot.holder.remove(codeModel); slot.holder.add(g); slot.blob.visible = true;
+    slot.b = { g, legs:[], glb:true, speed:1.1, stride:2.2, amp:0, flyer, wings:slot.b.wings, baseY:g.position.y };
+    slot.pop = 0;                                   // liten «sprett» når den dukker opp
+  }, undefined, (err) => {
+    console.error('GLB-feil', slot.d.id, err && err.message);
+    clearTimeout(fallback); codeModel.visible = true; slot.blob.visible = true; slot.glbLoading = false;
+  });
+}
 const PER_COL = { Trias:'#fbecd3', Jura:'#e3f1dc', Kritt:'#dcebf6' };
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -423,6 +458,8 @@ function makeSlot(i, anchor){
   const wrap = new THREE.Group(); wrap.rotation.x = PI/2; anchor.group.add(wrap);   // dinoens «opp» peker ut av kortet
   const holder = new THREE.Group(); wrap.add(holder);
   const b = BUILDERS[d.id]();
+  if(WALK_INSTEAD[d.id] && GLB[d.id]) b.flyer = false;
+  b.legs = b.legs || []; b.speed = b.speed || 1.2; b.stride = b.stride || 3; b.amp = b.amp || 0;
   const box = new THREE.Box3().setFromObject(b.g), sz = box.getSize(new THREE.Vector3());
   const s = (b.flyer ? .55 : .78) / Math.max(sz.x, sz.z, sz.y*.85);
   holder.scale.setScalar(s); holder.add(b.g);
@@ -430,7 +467,7 @@ function makeSlot(i, anchor){
   const blob = new THREE.Mesh(new THREE.CircleGeometry(1,24), new THREE.MeshBasicMaterial({ color:0x000000, transparent:true, opacity:.22, depthWrite:false }));
   blob.rotation.x = -PI/2;
   if(b.flyer){ blob.position.y=.003; blob.scale.set(.12,.12,1); wrap.add(blob); }
-  else { blob.position.y=.01; blob.scale.set(sz.x*.55, sz.z*.55, 1); holder.add(blob); }
+  else { blob.position.y=.01; blob.scale.set(sz.x*.42, sz.z*.36, 1); holder.add(blob); }
   const kid = buildKid(); kid.visible=false; wrap.add(kid);
   const visLen = (b.flyer ? sz.x : Math.max(sz.x,sz.z)) * s;
   const kidH = Math.min(1.6, 1.4 * visLen / d.lengde);
@@ -447,7 +484,8 @@ function animate(slot, dt, t){
     slot.theta += dt*.8;
     const r=.26; holder.position.set(Math.cos(slot.theta)*r, .32+Math.sin(t*1.3)*.04, Math.sin(slot.theta)*r);
     holder.rotation.set(0, Math.atan2(-Math.sin(slot.theta), Math.cos(slot.theta)), -.35);
-    const flap = Math.sin(t*6)*.55; b.wings[0].rotation.z=flap; b.wings[1].rotation.z=-flap;
+    if(b.glb) b.g.rotation.x = Math.sin(t*2.2)*.08;   // pen figur: gynger litt i lufta
+    else if(b.wings){ const flap = Math.sin(t*6)*.55; b.wings[0].rotation.z=flap; b.wings[1].rotation.z=-flap; }
     slot.blob.position.set(holder.position.x, .003, holder.position.z);
     return;
   }
@@ -465,6 +503,11 @@ function animate(slot, dt, t){
   if(b.tail) b.tail.rotation.y = Math.sin(t*(walking?3:1.2))*(walking?.25:.12);
   if(b.neck){ if(slot.neckBase===undefined) slot.neckBase=b.neck.rotation.x; b.neck.rotation.x = slot.neckBase + Math.sin(t*1.3)*.08 - (slot.roar>0? Math.sin(slot.roar/1.4*PI)*.25 : 0); }
   if(b.jaw) b.jaw.rotation.x = slot.roar>0 ? Math.sin((1.4-slot.roar)/1.4*PI)*.6 : 0;
+  if(b.glb){  // pen figur: vugger og humper når den går, reiser seg når den brøler
+    b.g.rotation.z = walking ? Math.sin(slot.phase)*.06 : b.g.rotation.z*.9;
+    b.g.position.y = b.baseY + (walking ? Math.abs(Math.sin(slot.phase))*.025 : 0);
+    b.g.rotation.x = slot.roar>0 ? -Math.sin((1.4-slot.roar)/1.4*PI)*.28 : Math.sin(t*1.6)*.015;
+  }
   slot.roar = Math.max(0, slot.roar-dt);
 }
 
@@ -549,7 +592,7 @@ async function start(){
     DINOS.forEach((d,i)=>{
       const anchor = mind.addAnchor(i);
       const slot = makeSlot(i, anchor);
-      anchor.onTargetFound = () => { slot.visible=true; slot.pop=0; show(slot); };
+      anchor.onTargetFound = () => { slot.visible=true; slot.pop=0; show(slot); loadPretty(slot); };
       anchor.onTargetLost  = () => { slot.visible=false; if(current===slot) hide(); };
     });
     await mind.start();
