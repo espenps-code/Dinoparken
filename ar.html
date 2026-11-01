@@ -57,6 +57,10 @@
   #actions[hidden]{display:none}
   #actions .btn{font-size:17px;padding:10px 16px}
   #actions .btn.on{background:#9fd46b}
+  #actions [hidden]{display:none}
+  #bSkel.on{background:#efe4c8}
+  #fossil{left:50%;transform:translateX(-50%);top:calc(max(12px,env(safe-area-inset-top)) + 64px);background:rgba(239,228,200,.96);border:3px solid var(--ink);border-radius:16px;padding:8px 14px;font:600 15px Fredoka,sans-serif;text-align:center;max-width:min(520px,calc(100% - 24px))}
+  #fossil[hidden]{display:none}
   #compare{left:50%;transform:translateX(-50%);bottom:calc(max(20px,env(safe-area-inset-bottom)) + 70px);background:rgba(255,253,246,.95);border:3px solid var(--ink);border-radius:16px;padding:8px 14px;font:600 16px Fredoka,sans-serif;text-align:center;max-width:calc(100% - 24px)}
   #compare[hidden]{display:none}
   /* Faktaark */
@@ -101,10 +105,12 @@
 </div>
 <div class="ui" id="scan" hidden><span class="frame"></span>Pek på et dinokort</div>
 <div class="ui" id="compare" hidden></div>
+<div class="ui" id="fossil" hidden>Alt vi vet om dinosaurene, kommer fra fossiler. Forskerne graver fram beina og setter dem sammen – som et puslespill!</div>
 <div class="ui" id="actions" hidden>
   <button class="btn" id="bFacts">Fakta</button>
   <button class="btn" id="bRoar">Brøl!</button>
   <button class="btn" id="bSize">Sammenlign med meg</button>
+  <button class="btn" id="bSkel" hidden>Vis skjelett</button>
 </div>
 <aside id="facts" aria-live="polite"></aside>
 
@@ -411,6 +417,32 @@ const BUILDERS = {
 const GLB = Object.fromEntries(['triceratops','brachiosaurus','tyrannosaurus','velociraptor','pteranodon','stegosaurus','ankylosaurus',
   'spinosaurus','diplodocus','parasaurolophus','allosaurus','iguanodon','pachycephalosaurus','archaeopteryx','compsognathus',
   'giganotosaurus','argentinosaurus','dilophosaurus','plateosaurus','therizinosaurus'].map(id=>[id,`glb/${id}.glb`]));
+/* Skjelett-figurer (Higgsfield). Legg til flere her etter hvert: id → fil */
+const SKEL = Object.fromEntries(Object.keys(GLB).map(id=>[id,`glb/${id}-skjelett.glb`]));
+let skelOn = false;
+function setOpacity(g, o){
+  g.traverse(m => { if(m.isMesh){ const mt=m.material; mt.transparent = o<1; mt.opacity = o; mt.depthWrite = o>.5; } });
+}
+function loadSkel(slot){
+  if(!SKEL[slot.d.id] || slot.skel || slot.skelLoading) return;
+  slot.skelLoading = true;
+  gltf.load(SKEL[slot.d.id], res => {
+    const g = res.scene;
+    g.traverse(o => { if(o.isMesh){ const m=o.material; m.metalness=0; m.roughness=.8; if(m.map) m.map.colorSpace=THREE.SRGBColorSpace; } });
+    const box = new THREE.Box3().setFromObject(g), sz = box.getSize(new THREE.Vector3());
+    g.position.y = -box.min.y;
+    const wrapS = new THREE.Group(); wrapS.add(g); slot.holder.add(wrapS);
+    slot.skel = { g, wrap:wrapS, baseY:g.position.y, size:.78/Math.max(sz.x, sz.z, sz.y*.85) };
+    slot.skelK = skelOn ? 1 : 0; applySkel(slot);
+  }, undefined, () => { slot.skelLoading = false; });
+}
+function applySkel(slot){
+  const sk = slot.skel; if(!sk) return;
+  sk.wrap.scale.setScalar(sk.size / slot.s);            // samme størrelse på kortet som dinoen
+  const k = slot.skelK;
+  sk.g.visible = k > 0.01; slot.b.g.visible = k < 0.99;
+  setOpacity(sk.g, Math.min(1,k)); setOpacity(slot.b.g, Math.min(1,1-k));
+}
 const WALK_INSTEAD = { archaeopteryx:true };   // den pene figuren sitter med vingene samlet – den hopper rundt i stedet for å fly
 const gltf = new GLTFLoader();
 function fitModel(slot, g, flyer){
@@ -436,6 +468,7 @@ function loadPretty(slot){
     slot.holder.remove(codeModel); slot.holder.add(g); slot.blob.visible = true;
     slot.b = { g, legs:[], glb:true, speed:1.1, stride:2.2, amp:0, flyer, wings:slot.b.wings, baseY:g.position.y };
     slot.pop = 0;                                   // liten «sprett» når den dukker opp
+    if(slot.skel) applySkel(slot);
   }, undefined, (err) => {
     console.error('GLB-feil', slot.d.id, err && err.message);
     clearTimeout(fallback); codeModel.visible = true; slot.blob.visible = true; slot.glbLoading = false;
@@ -495,6 +528,7 @@ function animate(slot, dt, t){
     if(b.glb) b.g.rotation.x = Math.sin(t*2.2)*.08;   // pen figur: gynger litt i lufta
     else if(b.wings){ const flap = Math.sin(t*6)*.55; b.wings[0].rotation.z=flap; b.wings[1].rotation.z=-flap; }
     slot.blob.position.set(holder.position.x, .003, holder.position.z);
+    skelTick(slot, b, dt);
     return;
   }
   slot.modeT -= dt;
@@ -516,7 +550,15 @@ function animate(slot, dt, t){
     b.g.position.y = b.baseY + (walking ? Math.abs(Math.sin(slot.phase))*.025 : 0);
     b.g.rotation.x = slot.roar>0 ? -Math.sin((1.4-slot.roar)/1.4*PI)*.28 : Math.sin(t*1.6)*.015;
   }
+  skelTick(slot, b, dt);
   slot.roar = Math.max(0, slot.roar-dt);
+}
+function skelTick(slot, b, dt){   // skjelettet følger dinoens bevegelse, og tones inn/ut
+  if(!slot.skel) return;
+  const sk = slot.skel;
+  if(b.glb){ sk.g.rotation.copy(b.g.rotation); sk.g.position.y = sk.baseY + (b.g.position.y - b.baseY); }
+  const target = skelOn ? 1 : 0;
+  if(slot.skelK !== target){ slot.skelK += Math.sign(target-slot.skelK)*Math.min(Math.abs(target-slot.skelK), dt*2.2); applySkel(slot); }
 }
 
 /* ---------- Lyd: brøl laget i nettleseren ---------- */
@@ -554,10 +596,13 @@ function show(slot){
   $('name').innerHTML = `${esc(d.navn)} <i>${d.periode}</i>`;
   $('scan').hidden=true; $('actions').hidden=false;
   slot.kid.visible = sizeOn; updateCompare();
+  $('bSkel').hidden = !SKEL[d.id];
+  $('fossil').hidden = !(skelOn && SKEL[d.id]);
+  if(SKEL[d.id]) loadSkel(slot);
   if($('facts').classList.contains('open')) fillFacts(d);
 }
 function hide(){
-  current=null; $('name').hidden=true; $('actions').hidden=true; $('compare').hidden=true; $('scan').hidden=false;
+  current=null; $('name').hidden=true; $('actions').hidden=true; $('compare').hidden=true; $('fossil').hidden=true; $('scan').hidden=false;
 }
 function updateCompare(){
   if(!current || !sizeOn){ $('compare').hidden=true; return; }
@@ -584,6 +629,12 @@ function fillFacts(d){
 }
 $('bFacts').addEventListener('click',()=>{ if(!current) return; fillFacts(current.d); $('facts').classList.add('open'); });
 $('bRoar').addEventListener('click',()=>{ if(!current) return; current.roar=1.4; roarSound(current.d); });
+$('bSkel').addEventListener('click',()=>{
+  skelOn = !skelOn;
+  $('bSkel').classList.toggle('on',skelOn); $('bSkel').textContent = skelOn ? 'Vis dinoen' : 'Vis skjelett';
+  $('fossil').hidden = !(skelOn && current && SKEL[current.d.id]);
+  if(current) loadSkel(current);
+});
 $('bSize').addEventListener('click',()=>{ sizeOn=!sizeOn; $('bSize').classList.toggle('on',sizeOn); for(const s of slots) if(s) s.kid.visible=sizeOn; updateCompare(); });
 
 /* ---------- Start ---------- */
