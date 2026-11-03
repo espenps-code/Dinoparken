@@ -273,7 +273,8 @@ function refreshLabels(){
 const tmp=new THREE.Vector3();
 function placeLabels(){
   for(const id in anchors){ tmp.copy(anchors[id]).project(camera);
-    tags[id].style.transform=`translate(${(tmp.x*.5+.5)*innerWidth}px,${(-tmp.y*.5+.5)*innerHeight}px) translate(-50%,-100%)`; }
+    // left/top (ikke transform), så forstørrelsen ved hover ikke flytter skiltet sidelengs
+    tags[id].style.left=(tmp.x*.5+.5)*innerWidth+'px'; tags[id].style.top=(-tmp.y*.5+.5)*innerHeight+'px'; }
 }
 window.DinoParkHUD();
 
