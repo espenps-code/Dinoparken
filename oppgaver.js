@@ -10,7 +10,7 @@
      penger  – Kiosken        (norske kroner)
      tier    – Rugeriet       (10-er-venner)
      lyder   – Brøleren       (første lyd)
-     stavelser – Skiltstien   (ord med to stavelser)
+     stavelser – Skiltstien   (lese ord med én og to stavelser)
 
    Lagring:
      dinoparken-v8          – parkens lagring (mynter, egg, unger). Deles med index.html
@@ -30,6 +30,7 @@ const LÆRING = {
   repetisjonsGange: 2,   // lysende stasjon (repetisjon) gir så mange ganger mynter
   mestringAv: 10,        // ser på de siste så mange oppgavene på et nivå …
   mestringKrav: 8,       // … og så mange må være riktige for stjerne og nytt nivå
+  storeBokstaver: true,  // Skiltstien: true = STORE BOKSTAVER, false = små bokstaver
   repetisjonDager: [1, 3, 7, 14, 30], // når et mestret tema skal repeteres (dager)
   voksenKode: '1234',    // samme som i index.html – bytt begge steder
 };
@@ -53,14 +54,14 @@ const STASJONER = [
   { id:'penger',    navn:'Kiosken',      tema:'Penger',            ikon:'🪙', farge:'#e0a21f' },
   { id:'tier',      navn:'Rugeriet',     tema:'10-er-venner',      ikon:'🥚', farge:'#e0782f' },
   { id:'lyder',     navn:'Brøleren',     tema:'Lyder i ord',       ikon:'📣', farge:'#c2453a' },
-  { id:'stavelser', navn:'Skiltstien',   tema:'To stavelser',      ikon:'🪧', farge:'#7d64c4' },
+  { id:'stavelser', navn:'Skiltstien',   tema:'Lese ord',          ikon:'🪧', farge:'#7d64c4' },
 ];
 const NIVÅNAVN = {
   klokke:    ['Hele timer', 'Halv', 'Kvart over', 'Kvart på', 'Alt blandet', 'Ettermiddag (24 t)'],
   penger:    ['Kjenn myntene', 'Betal nøyaktig til 50 kr', 'Sedler til 200 kr', 'Vekslebua', 'Opp til 500 kr', 'Penger tilbake'],
   tier:      ['Se mengden', 'Hvor mange mangler?', 'Bare tall', 'Vennepar', '100-venner'],
   lyder:     ['Første lyd (2 valg)', 'Første lyd (4 valg)', 'Siste lyd', 'Lyden i midten', 'Fotsporboksene'],
-  stavelser: ['Klapp ordet', 'Hør og velg', 'Eggene smelter sammen', 'Les med buer', 'Les uten buer'],
+  stavelser: ['Korte ord', 'To stavelser med buer', 'To stavelser uten buer', 'Hør og finn ordet', 'Små setninger'],
 };
 
 /* ---------- Ord (bilder i bilder/ord/, innlest i lyd/ord-<fil>.mp3 – samme som Myntlands Lydverksted) ---------- */
@@ -87,6 +88,9 @@ const STAVORD = [
   ['zebra','zebra',['ZE','BRA']],['jojo','jojo',['JO','JO']],['øre','oere',['Ø','RE']],['ubåt','ubaat',['U','BÅT']],
 ].map(([ord,fil,stav])=>({ord,fil,stav}));
 const TO_STAV = STAVORD.filter(o=>o.stav.length===2);
+/* Korte, lydrette ord til lesing på nivå 1 (ingen stumme bokstaver) */
+const ENSTAV = ['sol','mus','bil','hus','rev','sag','lys','hatt','penn','kam','katt','tann','buss','bål','gås','bær','nøtt','sekk','fisk','is','ost','egg','ku','sko','gris','stol','tre','bok']
+  .map(ord=>{ const x=LYDORD.find(y=>y.ord===ord); return { ord, fil:x.fil, stav:[ord.toUpperCase()] }; });
 const BOKSTAVER = 'ABDEFGHIJKLMNOPRSTUVØ'.split('');
 const BOKSTAVFIL = b => ({ 'Æ':'AE','Ø':'OE','Å':'AA' }[b] || b);
 
@@ -461,48 +465,47 @@ const LYDER = {
 };
 function lagLyder(nivå,K){ return nivå===1 ? LYDER.første(1,K) : LYDER[pick(['første','kresen'])](2,K); }
 
-/* ---------- STAVELSER ---------- */
-function forklarStav(boks,o){
-  boks.innerHTML=`<div class="do-forklar">${imgFor(o.fil)}<div><p class="do-stavvis">${o.stav.map(s=>`<span>${s}</span>`).join('')}</p>
-    <p><b>${cap(o.ord)}</b> har <b>${o.stav.length}</b> ${o.stav.length===1?'stavelse – ett klapp':'stavelser – to klapp'}.</p></div></div>`;
-  Lyd.spill(o.stav.length===1?[{ord:o.fil,reserve:o.ord}]:[o.stav[0].toLowerCase(),{pause:250},o.stav[1].toLowerCase(),{pause:400},{ord:o.fil,reserve:o.ord}]);
+/* ---------- LESE ORD (Skiltstien): ord med én og to stavelser ----------
+   Ordet leses IKKE opp før eleven har svart – det er lesing, ikke lytting.
+   Feilsvarene begynner helst på samme bokstav, så eleven må lese hele ordet. */
+const visOrd = s => LÆRING.storeBokstaver ? s.toUpperCase() : s.toLowerCase();
+function skilt(o,buer){
+  const inn = (buer && o.stav.length>1) ? o.stav.map(x=>`<span class="do-bue">${visOrd(x)}</span>`).join('') : `<span>${visOrd(o.ord)}</span>`;
+  return `<div class="do-skilt">${inn}</div>`;
 }
-const STAV = {
-  klapp(){ // klapp på trommen
-    const o=pick(Math.random()<.4?STAVORD.filter(x=>x.stav.length===1):TO_STAV);
-    return { tekst:`Klapp ordet! Trykk på trommen én gang for hvert klapp.`, si:[`Klapp ordet`, {ord:o.fil,reserve:o.ord}],
-      tegn(boks,svar){ let n=0;
-        boks.innerHTML=`<div class="do-midt">${imgFor(o.fil)}</div><div class="do-klapprad"><button class="do-knapp liten" data-hør>🔊 Hør ordet</button>
-          <button class="do-tromme" data-tromme>👏</button><span class="do-klapp" data-vis></span></div>
-          <div class="do-valg"><button class="do-knapp liten" data-null>Start på nytt</button><button class="do-knapp go" data-ok>Ferdig</button></div>`;
-        const vis=boks.querySelector('[data-vis]');
-        boks.querySelector('[data-hør]').onclick=()=>Lyd.spill({ord:o.fil,reserve:o.ord});
-        boks.querySelector('[data-tromme]').onclick=e=>{ if(n<5){ n++; vis.innerHTML='<i></i>'.repeat(n); e.currentTarget.classList.remove('slag'); void e.currentTarget.offsetWidth; e.currentTarget.classList.add('slag'); Lyd.pip(true); } };
-        boks.querySelector('[data-null]').onclick=()=>{ n=0; vis.innerHTML=''; };
-        boks.querySelector('[data-ok]').onclick=()=>{ if(!n) return; boks.querySelectorAll('button').forEach(x=>x.disabled=true); svar(n===o.stav.length); }; },
-      forklar(boks){ forklarStav(boks,o); } };
-  },
-  telle(){ // ett eller to klapp – velg
-    const o=pick(Math.random()<.4?STAVORD.filter(x=>x.stav.length===1):TO_STAV);
-    return { tekst:`Hvor mange klapp har ordet?`, si:[`Hvor mange klapp har ordet`, {ord:o.fil,reserve:o.ord}],
-      tegn(boks,svar){ boks.innerHTML=`<div class="do-midt">${imgFor(o.fil)}</div><div class="do-valg"><button class="do-knapp liten" data-hør>🔊 Hør ordet</button></div>`;
-        boks.querySelector('[data-hør]').onclick=()=>Lyd.spill({ord:o.fil,reserve:o.ord});
-        valgknapper(boks,[1,2],o.stav.length,svar,{stor:true,html:v=>v===1?'👏<small>1 klapp</small>':'👏👏<small>2 klapp</small>'}); },
-      forklar(boks){ forklarStav(boks,o); } };
-  },
-  hør(nivå,K){ // hør stavelsene hver for seg, velg bildet
-    const o=pick(TO_STAV), andre=shuffle(TO_STAV.filter(x=>x!==o && x.stav[0]!==o.stav[0])).slice(0,2), alle=shuffle([o,...andre]);
-    const delt=[o.stav[0].toLowerCase(),{pause:550},o.stav[1].toLowerCase()];
-    return { tekst:`Skiltet snakker i stavelser! Hvilket ord sier det?`, si:[`Hør godt.`, {pause:300}, ...delt],
-      tegn(boks,svar){ boks.innerHTML=`<div class="do-valg"><button class="do-knapp liten" data-hør>🔊 Hør stavelsene</button></div>`;
-        boks.querySelector('[data-hør]').onclick=()=>Lyd.spill(delt);
+function lignende(o,liste,n){
+  const samme=shuffle(liste.filter(x=>x!==o && x.ord[0]===o.ord[0]));
+  const andre=shuffle(liste.filter(x=>x!==o && x.ord[0]!==o.ord[0]));
+  return [...samme,...andre].slice(0,n);
+}
+function forklarLes(boks,o,buer){
+  const deler = o.stav.length>1 ? `<p class="do-stavvis">${o.stav.map(x=>`<span>${visOrd(x)}</span>`).join('+')}</p>` : '';
+  boks.innerHTML=`<div class="do-forklar">${imgFor(o.fil)}<div>${deler}<p>Ordet er <b class="do-lesord">${visOrd(o.ord)}</b>.</p>
+    <button class="do-knapp liten" data-hør>🔊 Hør ordet</button></div></div>`;
+  const spill=()=>Lyd.spill(o.stav.length>1?[o.stav[0].toLowerCase(),{pause:300},o.stav[1].toLowerCase(),{pause:450},{ord:o.fil,reserve:o.ord}]:[{ord:o.fil,reserve:o.ord}]);
+  boks.querySelector('[data-hør]').onclick=spill; spill();
+}
+const LES = {
+  ordTilBilde(nivå){ // les skiltet → velg bildet
+    const liste = nivå===1 ? ENSTAV : TO_STAV, buer = nivå===2;
+    const o=pick(liste), alle=shuffle([o,...lignende(o,liste,2)]);
+    return { tekst:`Les ordet på skiltet. Hvilket bilde passer?`, si:`Les ordet på skiltet. Hvilket bilde passer?`,
+      tegn(boks,svar){ boks.innerHTML=`<div class="do-midt">${skilt(o,buer)}</div>`;
         const rad=el('div','do-valg bilder');
         alle.forEach(x=>{ const b=el('button','do-knapp bildeknapp',imgFor(x.fil)); b.onclick=()=>{ rad.querySelectorAll('button').forEach(y=>y.disabled=true); b.classList.add(x===o?'rett':'feil'); svar(x===o); }; rad.appendChild(b); });
         boks.appendChild(rad); },
-      forklar(boks){ forklarStav(boks,o); } };
+      forklar(boks){ forklarLes(boks,o,buer); } };
+  },
+  bildeTilOrd(nivå){ // se bildet → les og velg riktig ord
+    const liste = nivå===1 ? ENSTAV : TO_STAV, buer = nivå===2;
+    const o=pick(liste), alle=[o,...lignende(o,liste,2)];
+    return { tekst:`Hvilket skilt passer til bildet? Les alle skiltene.`, si:`Hvilket skilt passer til bildet? Les alle skiltene.`,
+      tegn(boks,svar){ boks.innerHTML=`<div class="do-midt">${imgFor(o.fil)}</div>`;
+        valgknapper(boks,alle,o,svar,{html:x=>skilt(x,buer)}).classList.add('skilt'); },
+      forklar(boks){ forklarLes(boks,o,buer); } };
   },
 };
-function lagStavelser(nivå,K){ return nivå===1 ? STAV[pick(['klapp','klapp','telle'])](1,K) : STAV[pick(['hør','hør','klapp'])](2,K); }
+function lagStavelser(nivå){ return LES[pick(['ordTilBilde','ordTilBilde','bildeTilOrd'])](nivå); }
 
 const LAG = { klokke:lagKlokke, penger:lagPenger, tier:lagTier, lyder:lagLyder, stavelser:lagStavelser };
 
@@ -736,6 +739,11 @@ const css=`
 .do-tromme.slag{animation:doSlag .2s}@keyframes doSlag{50%{transform:scale(.9)}}
 .do-klapp{display:flex;gap:6px;min-width:80px}.do-klapp i{width:22px;height:22px;border-radius:50%;background:#7d64c4;border:2px solid #1f3b2c}
 .do-stavvis{display:flex;gap:6px;font:700 34px Fredoka}.do-stavvis span{background:#fff3cf;border:2px solid #1f3b2c;border-radius:12px;padding:2px 12px;border-bottom:6px solid #7d64c4}
+.do-skilt{display:inline-flex;gap:4px;background:#c08a55;border:4px solid #7a4a2a;border-radius:16px;padding:14px 26px;box-shadow:0 6px 0 rgba(31,59,44,.2)}
+.do-skilt span{font:700 clamp(40px,6vw,60px) 'Atkinson Hyperlegible',sans-serif;letter-spacing:3px;color:#fffdf6;line-height:1.1}
+.do-skilt .do-bue{padding:0 6px 8px;border-bottom:6px solid #fff3cf;border-radius:0 0 50% 50%/0 0 22px 22px}
+.do-valg.skilt .do-knapp{padding:6px;background:#fffdf6}.do-valg.skilt .do-skilt{padding:8px 16px}.do-valg.skilt .do-skilt span{font-size:clamp(28px,4vw,40px)}
+.do-lesord{font-size:1.3em;letter-spacing:2px}
 .do-fot{padding:10px 18px 16px;border-top:3px dashed #d8d2bd;display:flex;flex-direction:column;gap:6px;max-height:55%;overflow:auto}
 .do-fot:empty{display:none}
 .do-melding{font-size:22px;text-align:center}.do-melding.ok b{color:#1d7a35}.do-melding.bom b{color:#c2453a}
