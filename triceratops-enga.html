@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Triceratops-enga – Dinoparken</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#2f6b3a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --ink:#1f3b2c; --card:#fffdf6; --sky1:#cdeefa; }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;font-family:'Atkinson Hyperlegible',system-ui,sans-serif;color:var(--ink);
+    background:radial-gradient(ellipse at 50% 30%,#ffffff 0%,var(--sky1) 55%,#b9e2f2 100%)}
+  #scene{position:fixed;inset:0;display:block;width:100%;height:100%;touch-action:none}
+  .top{position:fixed;top:16px;left:16px;right:16px;display:flex;gap:10px;align-items:flex-start;z-index:5;pointer-events:none}
+  .top>*{pointer-events:auto}
+  .card{background:var(--card);border:3px solid var(--ink);border-radius:20px;box-shadow:0 6px 0 rgba(31,59,44,.18)}
+  .back{display:flex;align-items:center;gap:6px;padding:10px 16px;font:600 18px Fredoka,sans-serif;color:var(--ink);text-decoration:none;min-height:56px}
+  .title{padding:8px 16px;flex:1;min-width:0}
+  .title h1{font:700 clamp(22px,3.4vw,32px) Fredoka,sans-serif;margin:0;line-height:1.1}
+  .title p{margin:2px 0 0;font-size:15px}
+  .coins{display:flex;align-items:center;gap:8px;padding:8px 16px;font:700 26px Fredoka,sans-serif;min-height:56px}
+  .coins.pop{animation:pop .4s}@keyframes pop{50%{transform:scale(1.15)}}
+  .lock{width:44px;height:44px;border-radius:50%;font-size:18px;cursor:pointer;opacity:.55}
+  #labels{position:fixed;inset:0;pointer-events:none;z-index:4}
+  .st{position:absolute;left:0;top:0;transform:translate(-50%,-100%);display:flex;align-items:center;gap:8px;background:var(--card);
+    border:3px solid var(--ink);border-radius:18px;padding:5px 14px 5px 5px;font:600 18px Fredoka,sans-serif;color:var(--ink);white-space:nowrap;
+    pointer-events:auto;cursor:pointer;box-shadow:0 5px 0 rgba(31,59,44,.22);transition:scale .15s;touch-action:manipulation}
+  .st:hover{scale:1.08}
+  .st .ic{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:var(--c);font-size:24px;border:2px solid var(--ink)}
+  .st .tx small{display:block;font:400 13px 'Atkinson Hyperlegible',sans-serif;color:#4a6656}
+  .st .stars{color:#e0a21f;letter-spacing:1px}
+  .st.due{background:#fff3cf;animation:glow 1.6s ease-in-out infinite}
+  .st.due::after{content:'Trenger deg! ×2 🪙';position:absolute;left:50%;top:-14px;transform:translateX(-50%);background:#c2453a;color:#fff;font-size:12px;padding:2px 8px;border-radius:999px;border:2px solid var(--ink)}
+  @keyframes glow{0%,100%{box-shadow:0 5px 0 rgba(31,59,44,.22),0 0 0 0 rgba(242,163,58,.0)}50%{box-shadow:0 5px 0 rgba(31,59,44,.22),0 0 0 10px rgba(242,163,58,.45)}}
+  .hint{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:rgba(255,253,246,.95);border:2px solid var(--ink);
+    border-radius:999px;padding:8px 18px;font-size:16px;white-space:nowrap;z-index:5}
+  #loading{position:fixed;inset:0;display:grid;place-items:center;font:600 22px Fredoka,sans-serif;z-index:3}
+  @media (max-width:640px){ .st .tx small{display:none} .st{font-size:15px} .st .ic{width:36px;height:36px;font-size:20px} .title p{display:none} .hint{font-size:13px} }
+  @media (prefers-reduced-motion:reduce){ .st.due{animation:none} }
+</style>
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+</head>
+<body>
+<div id="loading">Laster Triceratops-enga …</div>
+<canvas id="scene" aria-label="Triceratops-enga i 3D"></canvas>
+<div id="labels"></div>
+<div class="top">
+  <a class="card back" href="index.html" aria-label="Tilbake til parken">◀ Parken</a>
+  <div class="card title"><h1>Triceratops-enga</h1><p>Gå rundt og hjelp til på stasjonene!</p></div>
+  <div class="card coins" id="coins" aria-label="Mynter"><svg width="30" height="30" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="11" fill="#f2c230" stroke="#1f3b2c" stroke-width="2.5"/><circle cx="13" cy="13" r="6.5" fill="none" stroke="#b8740f" stroke-width="2"/></svg><span id="coinN">0</span></div>
+  <button class="card lock" id="adult" aria-label="Voksenmeny">🔒</button>
+</div>
+<div class="hint">Trykk på en stasjon for å starte en runde</div>
+
+<script src="oppgaver.js"></script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const ENC_ID = 1;                       // hvilken innhegning dette er (samme id som i index.html)
+const GROUND = 0x9fd46b, DINO = 'tri';
+
+/* ---------- Mynter i toppen (leses fra parkens lagring) ---------- */
+const coinN=document.getElementById('coinN'), coinsBox=document.getElementById('coins');
+let lastCoins=null;
+window.DinoParkHUD = () => {
+  const s=DinoOppgaver.lesPark(); coinN.textContent=s.coins;
+  if(lastCoins!==null && s.coins!==lastCoins){ coinsBox.classList.remove('pop'); void coinsBox.offsetWidth; coinsBox.classList.add('pop'); }
+  lastCoins=s.coins; refreshLabels();
+};
+document.getElementById('adult').onclick=()=>DinoOppgaver.voksen();
+
+/* ---------- 3D-oppsett ---------- */
+const canvas=document.getElementById('scene');
+let renderer;
+try{ renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true}); }
+catch(e){ document.getElementById('loading').textContent='Denne nettleseren støtter ikke 3D (WebGL).'; throw e; }
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+const scene=new THREE.Scene();
+const camera=new THREE.OrthographicCamera(-1,1,1,-1,.1,300);
+camera.position.set(30,30,30);
+const controls=new OrbitControls(camera,canvas);
+controls.enableDamping=true; controls.dampingFactor=.08; controls.enablePan=false;
+controls.minZoom=.8; controls.maxZoom=2.4; controls.minPolarAngle=.55; controls.maxPolarAngle=1.1;
+controls.target.set(0,0,1);
+function resize(){
+  const w=innerWidth,h=innerHeight,a=w/h, v=a<1?Math.max(30,36/a):Math.max(30,44/a);
+  camera.left=-v*a/2; camera.right=v*a/2; camera.top=v/2; camera.bottom=-v/2; camera.updateProjectionMatrix();
+  renderer.setSize(w,h,false);
+}
+addEventListener('resize',resize); resize();
+scene.add(new THREE.HemisphereLight(0xffffff,0x8fae7a,1.25));
+const sun=new THREE.DirectionalLight(0xfff1d6,2.4); sun.position.set(18,30,10); sun.castShadow=true;
+sun.shadow.mapSize.set(2048,2048); Object.assign(sun.shadow.camera,{left:-26,right:26,top:26,bottom:-26,near:1,far:90});
+sun.shadow.bias=-.0004; sun.shadow.normalBias=.03; scene.add(sun);
+
+/* ---------- Hjelpere (samme som i index.html) ---------- */
+let seed=7;
+const rand=()=>{ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; };
+const R=(a,b)=>a+rand()*(b-a), PI=Math.PI;
+const mats={}; const M=c=>mats[c]||(mats[c]=new THREE.MeshStandardMaterial({color:c,flatShading:true,roughness:.85}));
+const G={ ico:new THREE.IcosahedronGeometry(1,0), dod:new THREE.DodecahedronGeometry(1,0), box:new THREE.BoxGeometry(1,1,1),
+  cone:new THREE.ConeGeometry(1,1,6), cone4:new THREE.ConeGeometry(1,1,4), cyl:new THREE.CylinderGeometry(1,1,1,6),
+  cyl8:new THREE.CylinderGeometry(1,1,1,8), cyl24:new THREE.CylinderGeometry(1,1,1,24), neck:new THREE.CylinderGeometry(.72,1,1,6) };
+function add(parent,geo,color,x=0,y=0,z=0,sx=1,sy=1,sz=1,cast=true){
+  const m=new THREE.Mesh(geo,color instanceof THREE.Material?color:M(color));
+  m.position.set(x,y,z); m.scale.set(sx,sy,sz); m.castShadow=cast; m.receiveShadow=true; parent.add(m); return m;
+}
+function slab(pts,y0,depth,mat){
+  const sh=new THREE.Shape(); pts.forEach((p,i)=>i?sh.lineTo(p.x,-p.z):sh.moveTo(p.x,-p.z));
+  const geo=new THREE.ExtrudeGeometry(sh,{depth,bevelEnabled:false}); geo.rotateX(-PI/2);
+  const m=new THREE.Mesh(geo,mat instanceof THREE.Material?mat:M(mat)); m.position.y=y0; m.receiveShadow=true; scene.add(m); return m;
+}
+function inPoly(P,x,z){ let c=false; for(let i=0,j=P.length-1;i<P.length;j=i++){ const a=P[i],b=P[j]; if(((a.z>z)!==(b.z>z))&&(x<(b.x-a.x)*(z-a.z)/(b.z-a.z)+a.x)) c=!c; } return c; }
+function blob(rx,rz,n,wob,cx=0,cz=0,s=3){ const P=[]; for(let i=0;i<n;i++){ const a=i/n*PI*2, k=1+Math.sin(a*2+s)*wob+Math.sin(a*3+s*2)*wob*.6; P.push({x:cx+Math.cos(a)*rx*k,z:cz+Math.sin(a)*rz*k,a}); } return P; }
+function clockTexture(){
+  const c=document.createElement('canvas'); c.width=c.height=256; const x=c.getContext('2d');
+  x.fillStyle='#fffdf6'; x.beginPath(); x.arc(128,128,124,0,7); x.fill(); x.lineWidth=10; x.strokeStyle='#1f3b2c'; x.stroke();
+  x.fillStyle='#1f3b2c'; x.font='700 34px Fredoka, sans-serif'; x.textAlign='center'; x.textBaseline='middle';
+  for(let i=1;i<=12;i++){ const a=i/12*PI*2; x.fillText(i,128+Math.sin(a)*92,128-Math.cos(a)*92); }
+  x.lineCap='round'; x.strokeStyle='#3f86c9'; x.lineWidth=9; x.beginPath(); x.moveTo(128,128); x.lineTo(128,40); x.stroke();
+  x.strokeStyle='#c2453a'; x.lineWidth=14; x.beginPath(); x.moveTo(128,128); x.lineTo(178,128); x.stroke();
+  const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; document.fonts&&document.fonts.ready.then(()=>{}); return t;
+}
+
+/* ---------- Landskap ---------- */
+const ISL=blob(19,17,40,.07,0,1,5);
+slab(ISL,-1.2,1.2,0x7cc35a);
+add(scene,G.cyl8,0x3fa9d6,0,-1.4,1,60,.2,60,false);
+const ENC=blob(13,11,16,.1,0,1,2);
+const groundMat=new THREE.MeshStandardMaterial({color:GROUND,flatShading:true,roughness:.9});
+slab(ENC,0,.12,groundMat);
+const WALK=blob(10.5,8.5,16,.1,0,1,2);
+/* Gjerde */
+{ const P=ENC, n=P.length, gateI=Math.round(n*.2);
+  for(let i=0;i<n;i++){ const a=P[i],b=P[(i+1)%n], len=Math.hypot(b.x-a.x,b.z-a.z), segs=Math.max(1,Math.round(len/1.3)), yaw=Math.atan2(b.x-a.x,b.z-a.z);
+    for(let k=0;k<segs;k++){ const t0=k/segs, tm=(k+.5)/segs;
+      if(i===gateI && Math.abs(tm-.5)<.35) continue;
+      add(scene,G.cyl,0x8a5a3a,a.x+(b.x-a.x)*t0,.55,a.z+(b.z-a.z)*t0,.11,1.1,.11);
+      for(const ry of [.45,.9]){ const r=add(scene,G.box,0xc08a55,a.x+(b.x-a.x)*tm,ry,a.z+(b.z-a.z)*tm,.07,.09,len/segs+.02); r.rotation.y=yaw; } } } }
+/* Dam */
+{ const P=blob(2.6,1.8,14,.12,-4.5,4.2,1); slab(P,.1,.06,new THREE.MeshStandardMaterial({color:0x56bce6,roughness:.3}));
+  for(let i=0;i<9;i++){ const a=i/9*PI*2; add(scene,G.dod,0x8f877f,-4.5+Math.cos(a)*2.9,.2,4.2+Math.sin(a)*2.1,R(.3,.5),R(.2,.35),R(.3,.5)); } }
+/* Planter */
+function pine(x,z,s=1){ const g=new THREE.Group(); g.position.set(x,0,z); g.rotation.y=R(0,6); scene.add(g);
+  add(g,G.cyl,0x7a4a2a,0,.5*s,0,.18*s,s,.18*s); for(let i=0;i<3;i++){ const r=(1.1-i*.28)*s; add(g,G.cone,0x4f9a4a,0,(1.2+i*.75)*s,0,r,1.3*s,r); } }
+function roundTree(x,z,s=1){ const g=new THREE.Group(); g.position.set(x,0,z); scene.add(g);
+  add(g,G.cyl,0x7a4a2a,0,.9*s,0,.2*s,1.8*s,.2*s); add(g,G.ico,0x6cbf4f,0,2.3*s,0,1.2*s,1.05*s,1.2*s); add(g,G.ico,0x5fb046,.7*s,2*s,.3*s,.75*s,.7*s,.75*s); }
+function fern(x,z,s=1){ for(let j=0;j<5;j++){ const c=add(scene,G.cone4,0x4f9a4a,x+R(-.2,.2),.35*s,z+R(-.2,.2),.1*s,R(.7,1)*s,.1*s); c.rotation.z=R(-.7,.7); c.rotation.x=R(-.5,.5); } }
+const flower=(x,z)=>add(scene,G.ico,[0xffd34d,0xff8fb1,0xffffff,0xb79cff][Math.floor(rand()*4)],x,.16,z,.13,.13,.13,false);
+
+/* ---------- Stasjonene ---------- */
+const STATION_POS={ klokke:{x:-6.5,z:-4.5}, penger:{x:6.8,z:-4.2}, tier:{x:1,z:-7}, lyder:{x:6,z:5.5}, stavelser:{x:-1.5,z:8.5} };
+const anchors={};
+function station(id,y){ const p=STATION_POS[id], g=new THREE.Group(); g.position.set(p.x,0,p.z); scene.add(g); anchors[id]=new THREE.Vector3(p.x,y,p.z); return g; }
+/* Fôringstavla: tavle med stor klokke + fôrkrybbe med bregner */
+{ const g=station('klokke',4.6);
+  for(const sx of [-1,1]) add(g,G.cyl,0x7a4a2a,sx*1.1,1.6,0,.14,3.2,.14);
+  add(g,G.box,0x8a5a3a,0,2.5,0,2.8,1.9,.18);
+  const face=new THREE.Mesh(new THREE.CircleGeometry(.85,32),new THREE.MeshStandardMaterial({map:clockTexture(),roughness:.6}));
+  face.position.set(0,2.5,.11); g.add(face); g.rotation.y=.6;
+  add(g,G.box,0x9a6a3e,.2,.35,1.6,2.4,.5,.9); add(g,G.box,0x6b9a3e,.2,.62,1.6,2.1,.08,.65,false);
+  for(let i=0;i<5;i++){ const c=add(g,G.cone4,0x4f9a4a,-.7+i*.45,.8,1.6,.09,.6,.09); c.rotation.z=R(-.5,.5); } }
+/* Kiosken */
+{ const g=station('penger',4.2);
+  add(g,G.box,0xf6ecd0,0,1,0,2.4,2,1.8); add(g,G.box,0x9a6a3e,0,1.05,.98,2.4,.18,.5);
+  add(g,G.box,0x1f3b2c,0,1.55,.91,1.8,.8,.02,false);
+  for(let i=0;i<6;i++) add(g,G.box,i%2?0xffffff:0xe0a21f,-1.25+i*.5,2.25,.25,.5,.14,2.3).rotation.x=-.25;
+  add(g,G.cone4,0xe0a21f,0,2.8,0,1.9,.7,1.6).rotation.y=PI/4;
+  add(g,G.cyl24,0xf2c230,-.6,1.24,1.05,.16,.04,.16); add(g,G.cyl24,0xe7e9ec,.5,1.24,1.08,.13,.04,.13); g.rotation.y=-.5; }
+/* Rugeriet: rugekasse med egg og varmelampe */
+{ const g=station('tier',3.4);
+  add(g,G.box,0x9a6a3e,0,.3,0,2.6,.6,1.4); add(g,G.box,0xe9c46a,0,.62,0,2.4,.06,1.2,false);
+  const eggGeo=new THREE.IcosahedronGeometry(1,1);
+  for(let i=0;i<5;i++) for(let j=0;j<2;j++){ if(i===4&&j===1) continue; const e=new THREE.Mesh(eggGeo,new THREE.MeshStandardMaterial({color:0xf6ecd0,flatShading:true}));
+    e.scale.set(.17,.22,.17); e.position.set(-.9+i*.45,.85,-.25+j*.5); e.castShadow=true; g.add(e); }
+  add(g,G.cyl,0x6e7b86,1.4,1.2,0,.06,2.4,.06); add(g,G.box,0x6e7b86,.9,2.35,0,1.1,.06,.06);
+  const lamp=add(g,G.cone,0xc2453a,.4,2.15,0,.35,.4,.35); lamp.rotation.x=PI;
+  add(g,G.ico,new THREE.MeshStandardMaterial({color:0xffd27a,emissive:0xff9a2a,emissiveIntensity:.8}),.4,1.92,0,.14,.14,.14,false); }
+/* Brøleren: høyttaler på stang */
+{ const g=station('lyder',4.4);
+  add(g,G.cyl,0x4a4a4a,0,1.5,0,.12,3,.12);
+  for(const [y,ry] of [[3,.6],[2.6,-1.2]]){ const h=new THREE.Group(); h.position.y=y; h.rotation.y=ry; g.add(h);
+    const c=add(h,G.cone,0xc2453a,0,0,.45,.45,.9,.45); c.rotation.x=-PI/2; add(h,G.cyl,0x1f3b2c,0,0,.9,.38,.04,.38).rotation.x=PI/2; }
+  add(g,G.dod,0x9a948c,0,.35,0,.8,.5,.8); }
+/* Skiltstien: tre skilt langs en liten sti */
+{ const g=station('stavelser',3.6);
+  for(let i=0;i<5;i++) add(g,G.cyl8,0xd9c79a,-2+i*1,.07,R(-.2,.2),.45,.06,.45,false);
+  const cols=[0x7d64c4,0x3f86c9,0xe0782f];
+  for(let i=0;i<3;i++){ const x=-1.6+i*1.6; add(g,G.cyl,0x7a4a2a,x,.8,-.7,.08,1.6,.08); const b=add(g,G.box,cols[i],x,1.5,-.7,1.1,.5,.08); b.rotation.z=(i-1)*.08; } }
+
+/* Pynt rundt omkring (men ikke oppå stasjonene) */
+const near=(x,z,r)=>Object.values(STATION_POS).some(p=>Math.hypot(p.x-x,p.z-z)<r) || Math.hypot(x+4.5,z-4.2)<3.6;
+for(let i=0;i<260;i++){
+  const a=R(0,PI*2), d=R(0,20), x=Math.cos(a)*d, z=1+Math.sin(a)*d*.9;
+  const inside=inPoly(ENC,x,z), onIsl=inPoly(ISL,x,z);
+  if(!onIsl) continue;
+  if(inside){ if(near(x,z,3) || inPoly(WALK,x,z)&&rand()<.85) continue; const k=rand(); if(k<.45) fern(x,z,R(.8,1.2)); else if(k<.7) flower(x,z); else add(scene,G.ico,0x5fb046,x,.3,z,.5,.4,.5); }
+  else { if(inPoly(blob(14,12,16,.1,0,1,2),x,z)) continue; const k=rand(); if(k<.45) pine(x,z,R(.8,1.2)); else if(k<.75) roundTree(x,z,R(.7,1)); else flower(x,z); }
+}
+
+/* ---------- Triceratopsene (bare de som har klekket i parken) ---------- */
+function legPivot(parent,x,y,z,len,thick,color){ const p=new THREE.Group(); p.position.set(x,y,z); parent.add(p);
+  add(p,G.cyl,color,0,-len/2,0,thick,len,thick); add(p,G.box,color,0,-len+.08,thick*.5,thick*2.2,.16,thick*2.8); return p; }
+function tail(parent,x,y,z,len,r,color,tilt=0){ const p=new THREE.Group(); p.position.set(x,y,z); parent.add(p);
+  const s=new THREE.Group(); s.rotation.x=tilt; p.add(s); const c=add(s,G.cone,color,0,0,-len/2,r,len,r); c.rotation.x=-PI/2; p.userData.seg=s; return p; }
+function neck(parent,x,y,z,len,r,tilt,color){ const p=new THREE.Group(); p.position.set(x,y,z); p.rotation.x=tilt; parent.add(p);
+  add(p,G.neck,color,0,len/2,0,r,len*1.05,r); const top=new THREE.Group(); top.position.y=len; top.rotation.x=-tilt; p.add(top); return {pivot:p,top}; }
+function eyes(head,x,y,z,s){ for(const sx of [-1,1]){ add(head,G.ico,0xffffff,sx*x,y,z,s,s,s,false); add(head,G.ico,0x1b1b1b,sx*(x+s*.55),y+s*.1,z+s*.25,s*.55,s*.6,s*.55,false); } }
+function buildTri(){
+  const g=new THREE.Group(), C=0xe0782f, F=0xf4c95d, H=0xfff3dc, legs=[];
+  for(const [x,z,o] of [[.62,.85,0],[-.62,.85,PI],[.62,-.85,PI],[-.62,-.85,0]]) legs.push([legPivot(g,x,.95,z,.95,.25,C),o]);
+  add(g,G.ico,C,0,1.55,0,1.1,.9,1.55); add(g,G.ico,F,0,1.3,.3,.8,.55,1.1);
+  const t=tail(g,0,1.5,-1.3,1.5,.38,C,-.15); const n=neck(g,0,1.65,1.25,.45,.38,1.25,C);
+  add(n.top,G.ico,C,0,0,.35,.62,.55,.8); const fr=add(n.top,G.cyl,F,0,.4,-.05,.95,.12,.95); fr.rotation.x=1.15;
+  for(const sx of [-1,1]){ const h=add(n.top,G.cone,H,sx*.25,.5,.5,.09,.75,.09); h.rotation.x=1.0; }
+  add(n.top,G.cone,H,0,.25,1.0,.08,.35,.08).rotation.x=.5; add(n.top,G.cone4,0xc9a06a,0,-.15,1.05,.18,.35,.18).rotation.x=PI/2;
+  eyes(n.top,.38,.2,.55,.13);
+  return { g, legs, tail:t, neck:n.pivot, speed:1.2, stride:3.0, amp:.45 };
+}
+const STAGE_K=[.45,.72,1], SIZE=[1,.7];
+const walkers=[];
+function pickTarget(u){ for(let i=0;i<40;i++){ const x=R(-10,10), z=1+R(-8,8); if(inPoly(WALK,x,z) && !near(x,z,2.4)){ u.target={x,z}; return; } } u.target={x:0,z:1}; }
+function spawnDinos(){
+  for(const d of walkers) scene.remove(d); walkers.length=0;
+  const list=(DinoOppgaver.lesPark().dinos||{})[ENC_ID]||[];
+  list.forEach((info,i)=>{ const b=buildTri(), d=b.g, s=(SIZE[i]||.7)*STAGE_K[info.stage||0]; d.scale.setScalar(s); scene.add(d);
+    d.userData={...b, scale:s, phase:0, wait:R(0,2), yaw:R(0,6)}; delete d.userData.g; pickTarget(d.userData); d.position.set(d.userData.target.x,0,d.userData.target.z); pickTarget(d.userData); walkers.push(d); });
+}
+spawnDinos();
+const wrapA=a=>Math.atan2(Math.sin(a),Math.cos(a));
+function updateWalker(d,dt,t){
+  const u=d.userData;
+  if(u.wait>0){ u.wait-=dt; for(const [p] of u.legs) p.rotation.x*=.85; u.neck.rotation.x=1.25+Math.sin(t*1.5)*.06; if(u.wait<=0) pickTarget(u); }
+  else { const dx=u.target.x-d.position.x, dz=u.target.z-d.position.z, dist=Math.hypot(dx,dz);
+    if(dist<.35) u.wait=R(1.5,5);
+    else { const diff=wrapA(Math.atan2(dx,dz)-u.yaw); u.yaw+=THREE.MathUtils.clamp(diff,-2.2*dt,2.2*dt);
+      const v=u.speed*(.6+.4*u.scale)*Math.max(0,Math.cos(diff)); d.position.x+=Math.sin(u.yaw)*v*dt; d.position.z+=Math.cos(u.yaw)*v*dt;
+      u.phase+=dt*Math.max(v,.4)*u.stride/u.scale; for(const [p,o] of u.legs) p.rotation.x=Math.sin(u.phase+o)*u.amp; } }
+  d.rotation.y=u.yaw; u.tail.userData.seg.rotation.y=Math.sin(t*2+u.phase)*.25;
+}
+
+/* ---------- Skilt over stasjonene ---------- */
+const labels=document.getElementById('labels'), tags={};
+for(const st of DinoOppgaver.STASJONER){
+  const b=document.createElement('button'); b.className='st'; b.style.setProperty('--c',st.farge);
+  b.innerHTML=`<span class="ic">${st.ikon}</span><span class="tx">${st.navn} <span class="stars"></span><small>${st.tema}</small></span>`;
+  b.onclick=()=>DinoOppgaver.open(st.id,{enc:ENC_ID,onClose:()=>{ refreshLabels(); spawnDinos(); window.DinoParkHUD(); }});
+  labels.appendChild(b); tags[st.id]=b;
+}
+function refreshLabels(){
+  for(const st of DinoOppgaver.STASJONER){
+    const s=DinoOppgaver.status(st.id), b=tags[st.id]; if(!b) continue;
+    b.querySelector('.stars').textContent='★'.repeat(s.stjerner);
+    b.querySelector('small').textContent=`${st.tema} · nivå ${s.nivå}`;
+    b.classList.toggle('due',s.forfall);
+    b.setAttribute('aria-label',`${st.navn}: ${st.tema}, nivå ${s.nivå}${s.forfall?', trenger repetisjon':''}`);
+  }
+}
+const tmp=new THREE.Vector3();
+function placeLabels(){
+  for(const id in anchors){ tmp.copy(anchors[id]).project(camera);
+    tags[id].style.transform=`translate(${(tmp.x*.5+.5)*innerWidth}px,${(-tmp.y*.5+.5)*innerHeight}px) translate(-50%,-100%)`; }
+}
+window.DinoParkHUD();
+
+/* ---------- Animasjon ---------- */
+const clock=new THREE.Clock();
+document.getElementById('loading').remove();
+renderer.setAnimationLoop(()=>{
+  const dt=Math.min(clock.getDelta(),.05), t=clock.elapsedTime;
+  for(const d of walkers) updateWalker(d,dt,t);
+  controls.update(); renderer.render(scene,camera); placeLabels();
+});
+</script>
+</body>
+</html>

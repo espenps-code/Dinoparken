@@ -333,6 +333,7 @@
   <p id="pFact"></p>
   <button class="linkbtn" id="pLib">Les mer i Dinobiblioteket</button>
   <div id="ownedBox">
+    <a class="btn go" id="pEnter" href="#" style="text-align:center;text-decoration:none;box-sizing:border-box;margin:0 0 12px">Gå inn i innhegningen ▶</a>
     <div id="nursery"></div>
     <div class="task" id="task">
       <div class="tlabel">Prøveoppdrag (plassholder)</div>
@@ -374,6 +375,7 @@ const PRICES = { 1:0, 2:30, 3:50, 4:70, 5:90, 6:120 };      // pris for tomtene
 const EGG_PRICES = { 1:20, 2:30, 3:40, 4:25, 5:30, 6:25 };  // pris per egg i hver innhegning
 const WHO = { 1:'to triceratopser', 2:'to brachiosauruser', 3:'en T-rex', 4:'tre raptorer', 5:'tre pteranodoner', 6:'to stegosauruser' };
 const SAVE_KEY = 'dinoparken-v8';
+const ENC_PAGES = { 1:'triceratops-enga.html' };   // innhegninger som har egen side med stasjoner (resten bruker prøveoppdraget)
 const dayStr = (d=new Date()) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const yesterday = () => { const d=new Date(); d.setDate(d.getDate()-1); return dayStr(d); };
 // Start: Triceratops-enga eies, og det første egget er nesten klart (rask første klekking)
@@ -1150,6 +1152,7 @@ function refreshPanel(){
   $('pNum').innerHTML=e.owned?e.id:LOCK_SVG;
   $('pName').textContent=e.owned?e.name:'Tomt til salgs';
   $('ownedBox').hidden=!e.owned; $('lockedBox').hidden=e.owned; $('pLib').hidden=!e.owned;
+  { const pg=ENC_PAGES[e.id]; $('pEnter').hidden=!pg; if(pg) $('pEnter').href=pg; $('task').hidden=!!pg; }
   if(e.owned){
     $('pFact').textContent=e.fact;
     renderNursery(e);
