@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Innleseskript – Dinoparken</title>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Atkinson Hyperlegible',system-ui,sans-serif;background:#f3fbef;color:#1f3b2c;line-height:1.55;padding:0 0 4rem}
+  header{background:linear-gradient(160deg,#1f3b2c,#2f6b3a 60%,#4f9a4a);color:#fff;padding:2.2rem 1rem}
+  .inner,main,footer{max-width:980px;margin:0 auto}
+  main{padding:1.6rem 1rem}
+  h1{font:700 clamp(1.8rem,4vw,2.6rem) Fredoka,sans-serif;margin-bottom:.3rem}
+  h1 span{color:#f2a33a}
+  header p{max-width:62ch;color:rgba(255,255,255,.92)}
+  section{background:#fffdf6;border:3px solid #1f3b2c;border-radius:20px;padding:1.3rem;margin-bottom:1.5rem;box-shadow:0 5px 0 rgba(31,59,44,.12)}
+  h2{font:700 1.35rem Fredoka,sans-serif;margin-bottom:.3rem;display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+  .tall{background:#f2a33a;color:#1f3b2c;border-radius:999px;font-size:.85rem;padding:.05rem .7rem}
+  .ingress{color:#4a6656;margin-bottom:.8rem}
+  .knapper{display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:.8rem}
+  table{width:100%;border-collapse:collapse}
+  th{text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:#4a6656;border-bottom:2px solid #d8e6d0;padding:.35rem .45rem}
+  td{padding:.4rem .45rem;border-bottom:1px solid #edf3e8;vertical-align:middle}
+  code{font-family:'Courier New',monospace;font-size:.85rem;color:#2f6b3a;background:#e6f3dc;padding:.1rem .4rem;border-radius:6px;white-space:nowrap}
+  .tekst{font-weight:700;font-size:1.05rem}
+  .kopi{text-align:right;width:1%}
+  button{font-family:inherit;font-weight:700;cursor:pointer;border-radius:999px;white-space:nowrap}
+  .kopiknapp{font-size:.8rem;border:2px solid #cfe1c5;background:#fff;color:#2f6b3a;padding:.25rem .7rem}
+  .kopiknapp:hover{border-color:#2f6b3a;background:#e6f3dc}
+  .kopiknapp.gjort{background:#2f6b3a;border-color:#2f6b3a;color:#fff}
+  .storknapp{font-size:.9rem;border:2px solid #1f3b2c;background:#1f3b2c;color:#fff;padding:.45rem 1.1rem}
+  .storknapp.lys{background:#fff;color:#1f3b2c}
+  .storknapp.gjort{background:#4f9a4a;border-color:#4f9a4a;color:#fff}
+  .status{font-size:.75rem;font-weight:700;border-radius:999px;padding:.1rem .55rem;white-space:nowrap}
+  .status.ja{background:#d6f0d9;color:#1d7a35}.status.nei{background:#ffe3d1;color:#a3401f}.status.ukjent{background:#eef1ec;color:#6b7c70}
+  tr.fins td{opacity:.6}
+  .boks{background:#fff3cf;border:3px solid #f2a33a;border-radius:16px;padding:1rem 1.2rem;margin-bottom:1.4rem}
+  .boks strong{display:block;font:700 1.05rem Fredoka,sans-serif;margin-bottom:.25rem}
+  .boks ul{margin:.4rem 0 0 1.2rem}.boks li{margin-bottom:.25rem}
+  #oppsummering{font-weight:700}
+  footer{padding:0 1rem;color:#4a6656;font-size:.85rem}
+  @media (max-width:640px){ td:first-child code{white-space:normal;word-break:break-all} }
+  @media print{ .kopi,.knapper,.storknapp{display:none} body{background:#fff} section{break-inside:avoid;box-shadow:none} }
+</style>
+</head>
+<body>
+<header><div class="inner">
+  <h1>Innleseskript – <span>Dinoparken</span></h1>
+  <p>Alt stasjonene i innhegningene sier høyt. Les inn i ElevenLabs med samme stemme som Lydverkstedet i Myntland, så høres ordene, bokstavlydene og tallene ut som én og samme stemme.</p>
+</div></header>
+<main>
+  <div class="boks">
+    <strong>Slik gjør du</strong>
+    <ul>
+      <li>Lagre hver innlesing med <b>nøyaktig</b> filnavnet i tabellen. Klipp som heter <code>dino/…</code> legges i mappa <code>lyd/dino/</code>. Tallene legges rett i <code>lyd/</code>.</li>
+      <li>Mangler en fil, leser iPaden teksten med sin egen stemme. Siden virker altså mens du holder på – du kan lese inn litt om gangen.</li>
+      <li>Noen setninger er delt i biter fordi et tall, et klokkeslett eller et ord kommer midt i («Legg» + «sju» + «egg i rugekassa.»). Les hver bit naturlig, uten lang pause først og sist.</li>
+      <li>Når arket ligger på nettet sammen med lydfilene, viser kolonnen <b>Status</b> hvilke filer som allerede ligger ute.</li>
+    </ul>
+  </div>
+  <p id="oppsummering"></p>
+  <div id="grupper"></div>
+</main>
+<footer>Lista lages automatisk fra oppgaver.js, så den stemmer alltid med det stasjonene faktisk sier.</footer>
+
+<script src="oppgaver.js"></script>
+<script>
+const grupper = DinoOppgaver.klippListe();
+const rot = document.getElementById('grupper');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function kopier(tekst, knapp){
+  const ferdig = () => { const før=knapp.textContent; knapp.classList.add('gjort'); knapp.textContent='✓ Kopiert'; setTimeout(()=>{ knapp.classList.remove('gjort'); knapp.textContent=før; },1400); };
+  if(navigator.clipboard) navigator.clipboard.writeText(tekst).then(ferdig, ()=>reserve(tekst,ferdig)); else reserve(tekst,ferdig);
+}
+function reserve(tekst, ferdig){ const t=document.createElement('textarea'); t.value=tekst; document.body.appendChild(t); t.select(); try{ document.execCommand('copy'); ferdig(); }catch(e){} t.remove(); }
+const rader = [];
+grupper.forEach((g, gi) => {
+  const sek = document.createElement('section');
+  sek.innerHTML = `<h2>${gi+1}. ${esc(g.navn)} <span class="tall">${g.klipp.length} klipp</span></h2><p class="ingress">${esc(g.ingress)}</p>
+    <div class="knapper"><button class="storknapp" data-alle>📋 Kopier alle som liste</button><button class="storknapp lys" data-mangler>📋 Kopier bare de som mangler</button></div>
+    <table><thead><tr><th>Filnavn</th><th>Tekst som leses inn</th><th>Status</th><th></th></tr></thead><tbody></tbody></table>`;
+  const tb = sek.querySelector('tbody');
+  g.klipp.forEach(x => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td><code>${esc(x.fil)}</code></td><td class="tekst">${esc(x.tekst)}</td><td><span class="status ${x.fins?'ja':'ukjent'}">${x.fins?'Fins fra Myntland':'…'}</span></td><td class="kopi"><button class="kopiknapp">📋 Kopier</button></td>`;
+    tr.querySelector('.kopiknapp').onclick = e => kopier(x.tekst, e.currentTarget);
+    tb.appendChild(tr); rader.push({x, tr, g});
+  });
+  const liste = utvalg => utvalg.map(x => x.tekst).join('\n\n');   // bare teksten, én per linje med tom linje imellom
+  sek.querySelector('[data-alle]').onclick = e => kopier(liste(g.klipp), e.currentTarget);
+  sek.querySelector('[data-mangler]').onclick = e => kopier(liste(rader.filter(r=>r.g===g && !r.fins).map(r=>r.x)), e.currentTarget);
+  rot.appendChild(sek);
+});
+/* Sjekk hvilke filer som ligger ute (virker når arket ligger på nettet) */
+const oppsum = document.getElementById('oppsummering');
+let ja=0, sjekket=0;
+const totalt = rader.length;
+oppsum.textContent = `${totalt} klipp totalt. Sjekker hvilke som allerede er lest inn …`;
+rader.forEach(r => {
+  fetch('lyd/'+r.x.fil, {method:'HEAD', cache:'no-store'}).then(res => res.ok, () => null).then(ok => {
+    sjekket++;
+    const s = r.tr.querySelector('.status');
+    if(ok===true){ ja++; r.fins=true; r.tr.classList.add('fins'); s.className='status ja'; s.textContent='✓ Lest inn'; }
+    else if(ok===false){ r.fins=false; s.className='status nei'; s.textContent='Mangler'; }
+    else { r.fins=!!r.x.fins; s.className='status '+(r.x.fins?'ja':'ukjent'); s.textContent=r.x.fins?'Fins fra Myntland':'Ukjent'; }
+    if(sjekket===totalt) oppsum.textContent = `${totalt} klipp totalt – ${ja} er lest inn, ${totalt-ja} mangler.`;
+  });
+});
+</script>
+</body>
+</html>

@@ -160,28 +160,56 @@ function status(id){
    Lyd: innleste filer først, ellers nettleserens norske stemme
    ========================================================================== */
 const Lyd = (()=>{
-  let kø=[], aktiv=null, stemme=null, tok=0;
+  /* Lydfilene spilles gjennom Web Audio. Safari på iPad blokkerer vanlige <audio>-avspillinger som ikke
+     starter rett etter et trykk – da ble klipp nr. 2, 3 … i en setning stoppet og iPad-stemmen tok over.
+     Web Audio låses opp én gang ved første trykk og kan deretter spille mange klipp etter hverandre. */
+  let kø=[], aktiv=null, stemme=null, tok=0, ctx=null;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  const lydmotor = () => { if(!ctx && AC){ try{ ctx=new AC(); }catch(e){} } return ctx; };
+  const lås = () => { const c=lydmotor(); if(c && c.state==='suspended') c.resume(); };
+  ['pointerdown','touchend','click','keydown'].forEach(ev=>document.addEventListener(ev, lås, {capture:true, passive:true}));
+  const lager = {};   // fil → Promise<AudioBuffer|null>  (null = fila fins ikke)
+  function hent(fil){
+    if(!(fil in lager)){
+      lager[fil] = fetch(fil).then(r=>{ if(!r.ok) throw 0; return r.arrayBuffer(); })
+        .then(ab=>new Promise((ok,feil)=>{ const c=lydmotor(); if(!c) return feil(); c.decodeAudioData(ab, ok, feil); }))
+        .catch(()=>null);
+    }
+    return lager[fil];
+  }
   const finnStemme = () => {
     if(!('speechSynthesis' in window)) return null;
     const v=speechSynthesis.getVoices();
     return v.find(x=>/^nb/i.test(x.lang)) || v.find(x=>/^no/i.test(x.lang)) || v.find(x=>/^nn/i.test(x.lang)) || null;
   };
   if('speechSynthesis' in window){ stemme=finnStemme(); speechSynthesis.onvoiceschanged=()=>{ stemme=finnStemme(); }; }
-  function stopp(){ tok++; kø=[]; if(aktiv&&aktiv.pause) aktiv.pause(); aktiv=null; if('speechSynthesis' in window) speechSynthesis.cancel(); }
+  function stopp(){
+    tok++; kø=[];
+    if(aktiv && aktiv.stop){ try{ aktiv.onended=null; aktiv.stop(); }catch(e){} }
+    aktiv=null; if('speechSynthesis' in window) speechSynthesis.cancel();
+  }
+  function snakk(tekst,t){
+    if(!tekst || !('speechSynthesis' in window)){ neste(t); return; }
+    const u=new SpeechSynthesisUtterance(tekst); u.lang='nb-NO'; if(stemme) u.voice=stemme; u.rate=.92;
+    u.onend=()=>neste(t); u.onerror=()=>neste(t); aktiv=u; speechSynthesis.speak(u);
+  }
   function neste(t){
     if(t!==tok) return;
     const x=kø.shift(); if(!x){ aktiv=null; return; }
-    if(x.pause){ setTimeout(()=>neste(t), x.pause); return; }
+    if(x.pause){ aktiv={pause:true}; setTimeout(()=>neste(t), x.pause); return; }
     if(x.fil){
-      const a=new Audio(x.fil); aktiv=a;
-      a.onended=()=>neste(t); a.onerror=()=>{ x.reserve ? (kø.unshift({tts:x.reserve}), neste(t)) : neste(t); };
-      a.play().catch(()=>{ x.reserve ? (kø.unshift({tts:x.reserve}), neste(t)) : neste(t); });
+      aktiv={laster:true};
+      hent(x.fil).then(b=>{
+        if(t!==tok) return;
+        const c=lydmotor();
+        if(!b || !c){ snakk(x.reserve,t); return; }   // fila mangler → iPad-stemmen leser teksten
+        if(c.state==='suspended') c.resume();
+        const s=c.createBufferSource(); s.buffer=b; s.connect(c.destination);
+        s.onended=()=>neste(t); aktiv=s; s.start();
+      });
       return;
     }
-    if(x.tts && 'speechSynthesis' in window){
-      const u=new SpeechSynthesisUtterance(x.tts); u.lang='nb-NO'; if(stemme) u.voice=stemme; u.rate=.92;
-      u.onend=()=>neste(t); u.onerror=()=>neste(t); aktiv=u; speechSynthesis.speak(u); return;
-    }
+    if(x.tts){ snakk(x.tts,t); return; }
     neste(t);
   }
   /* spill([...]) – elementer: 'tekst', {ord:'fil'}, {bokstav:'S'}, {klipp:'navn'}, {tall:7}, {pause:300}
@@ -194,15 +222,15 @@ const Lyd = (()=>{
     if(x.tall!=null) return {fil:`lyd/tall-${x.tall}.mp3`, reserve:String(x.tall)};
     return x;
   }
-  const liste2 = l => (Array.isArray(l)?l:[l]).filter(Boolean).map(tilElement);
-  function spill(liste){ stopp(); const t=tok; kø=liste2(liste); neste(t); }
+  // alle filene i en setning hentes med en gang, så det blir korte pauser mellom bitene
+  const liste2 = l => (Array.isArray(l)?l:[l]).filter(Boolean).map(tilElement).map(x=>{ if(x.fil) hent(x.fil); return x; });
+  function spill(liste){ lås(); stopp(); const t=tok; kø=liste2(liste); neste(t); }
   /* leggTil([...]) – spilles etter det som spilles nå (eller med en gang hvis det er stille) */
   function leggTil(liste){ if(!aktiv && !kø.length){ spill(liste); return; } kø.push(...liste2(liste)); }
   /* Små effektlyder uten filer */
-  let ac=null;
   function pip(ok){
     try{
-      ac=ac||new (window.AudioContext||window.webkitAudioContext)();
+      const ac=lydmotor(); if(!ac) return;
       const n=ok?[523,659,784]:[330,262], t0=ac.currentTime;
       n.forEach((f,i)=>{ const o=ac.createOscillator(), g=ac.createGain(); o.type=ok?'triangle':'sine'; o.frequency.value=f;
         g.gain.setValueAtTime(.0001,t0+i*.09); g.gain.exponentialRampToValueAtTime(.18,t0+i*.09+.02); g.gain.exponentialRampToValueAtTime(.0001,t0+i*.09+.25);
