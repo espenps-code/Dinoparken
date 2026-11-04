@@ -36,17 +36,22 @@ const LÆRING = {
 };
 const PARK = { key:'dinoparken-v8', startCoins:20, eggWarm:4, grow:[3,5] };   // må stemme med CONFIG i index.html
 const LKEY = 'dinoparken-laering-v1';
-const BYGDE_NIVÅ = 2;    // nivåer som er laget så langt
+const BYGDE = { klokke:6, penger:6, tier:5, lyder:5, stavelser:5 };   // nivåer som er laget per tema
 
 /* ---------- Kulisse per innhegning ---------- */
 const KULISSE = {
   1: { dino:'triceratopsene', dinoEn:'triceratopsen', mat:'bregner', matEn:'bregne',
        kiosk:[['Bregneis','🍦'],['Dinoburger','🍔'],['Hornhatt','🎩'],['Eggkjeks','🍪'],['Saft','🧃'],['Dinobamse','🧸'],['Postkort','✉️'],['Ballong','🎈']] },
-  2: { dino:'langhalsene', dinoEn:'brachiosaurusen', mat:'tretopper', matEn:'grein', kiosk:[['Bladis','🍦'],['Langhalsbamse','🧸'],['Saft','🧃']] },
-  3: { dino:'T-rexen', dinoEn:'T-rexen', mat:'kjøttbiter', matEn:'kjøttbit', kiosk:[['Tannkjeks','🍪'],['T-rex-hatt','🎩'],['Saft','🧃']] },
-  4: { dino:'raptorene', dinoEn:'raptoren', mat:'kjøttbiter', matEn:'kjøttbit', kiosk:[['Raptorkjeks','🍪'],['Fjærhatt','🎩'],['Saft','🧃']] },
-  5: { dino:'flygeøglene', dinoEn:'pteranodonen', mat:'fisker', matEn:'fisk', kiosk:[['Fiskeis','🍦'],['Vingehatt','🎩'],['Saft','🧃']] },
-  6: { dino:'stegosaurusene', dinoEn:'stegosaurusen', mat:'sumpplanter', matEn:'plante', kiosk:[['Sumpis','🍦'],['Piggbamse','🧸'],['Saft','🧃']] },
+  2: { dino:'langhalsene', dinoEn:'brachiosaurusen', mat:'tretopper', matEn:'grein',
+       kiosk:[['Bladis','🍦'],['Langhalsbamse','🧸'],['Halsskjerf','🧣'],['Eggkjeks','🍪'],['Saft','🧃'],['Kikkert','🔭'],['Postkort','✉️'],['Ballong','🎈']] },
+  3: { dino:'T-rexen', dinoEn:'T-rexen', mat:'kjøttbiter', matEn:'kjøttbit',
+       kiosk:[['Tannkjeks','🍪'],['T-rex-hatt','🎩'],['Brølefløyte','📯'],['Kjøttboller','🍖'],['Saft','🧃'],['T-rex-bamse','🧸'],['Postkort','✉️'],['Ballong','🎈']] },
+  4: { dino:'raptorene', dinoEn:'raptoren', mat:'kjøttbiter', matEn:'kjøttbit',
+       kiosk:[['Raptorkjeks','🍪'],['Fjærhatt','🎩'],['Klo-anheng','📿'],['Pølse','🌭'],['Saft','🧃'],['Raptorbamse','🧸'],['Postkort','✉️'],['Ballong','🎈']] },
+  5: { dino:'flygeøglene', dinoEn:'pteranodonen', mat:'fisker', matEn:'fisk',
+       kiosk:[['Fiskeis','🍦'],['Vingehatt','🎩'],['Papirfly','✈️'],['Fiskekake','🐟'],['Saft','🧃'],['Flygeøglebamse','🧸'],['Postkort','✉️'],['Drage','🪁']] },
+  6: { dino:'stegosaurusene', dinoEn:'stegosaurusen', mat:'sumpplanter', matEn:'plante',
+       kiosk:[['Sumpis','🍦'],['Piggbamse','🧸'],['Gummistøvler','👢'],['Eggkjeks','🍪'],['Saft','🧃'],['Froskeslikkepinne','🍭'],['Postkort','✉️'],['Ballong','🎈']] },
 };
 
 const STASJONER = [
@@ -65,17 +70,19 @@ const NIVÅNAVN = {
 };
 
 /* ---------- Ord (bilder i bilder/ord/, innlest i lyd/ord-<fil>.mp3 – samme som Myntlands Lydverksted) ---------- */
-const LYDORD = [ // f = første bokstav/lyd
-  ['sol','sol','S'],['mus','mus','M'],['bil','bil','B'],['hus','hus','H'],['tog','tog','T'],['rev','rev','R'],
-  ['sag','sag','S'],['lys','lys','L'],['dør','door','D'],['bok','bok','B'],['hatt','hatt','H'],['gutt','gutt','G'],
-  ['penn','penn','P'],['kam','kam','K'],['katt','katt','K'],['tann','tann','T'],['buss','buss','B'],['bål','baal','B'],
-  ['gås','gaas','G'],['bær','baer','B'],['nøtt','noett','N'],['ring','ring','R'],['fisk','fisk','F'],['eple','eple','E'],
-  ['ape','ape','A'],['ugle','ugle','U'],['øye','oeye','Ø'],['kake','kake','K'],['nese','nese','N'],['jakke','jakke','J'],
-  ['løve','loeve','L'],['vaffel','vaffel','V'],['is','is','I'],['ost','ost','O'],['egg','egg','E'],['ku','ku','K'],
-  ['stol','stol','S'],['sko','sko','S'],['gris','gris','G'],['hund','hund','H'],['fugl','fugl','F'],['måne','maane','M'],
-  ['sekk','sekk','S'],['lue','lue','L'],['tre','tre','T'],['klokke','klokke','K'],['due','due','D'],['pose','pose','P'],
-  ['ballong','ballong','B'],['sitron','sitron','S'],['banan','banan','B'],['jente','jente','J'],['zebra','zebra','Z'],
-].map(([ord,fil,f])=>({ord,fil,f}));
+const LYDORD = [ // f = første lyd, s = siste lyd, m = vokalen i midten (null = ikke brukt). Samme ord som i Myntlands Lydverksted.
+  ['sol','sol','S','L','O'],['mus','mus','M','S','U'],['bil','bil','B','L','I'],['hus','hus','H','S','U'],['tog','tog','T','G',null],
+  ['rev','rev','R','V','E'],['sag','sag','S','G','A'],['lys','lys','L','S','Y'],['dør','door','D','R','Ø'],['bok','bok','B','K','O'],
+  ['hatt','hatt','H','T','A'],['gutt','gutt','G','T','U'],['penn','penn','P','N','E'],['kam','kam','K','M','A'],['katt','katt','K','T','A'],
+  ['tann','tann','T','N','A'],['buss','buss','B','S','U'],['bål','baal','B','L','Å'],['gås','gaas','G','S','Å'],['bær','baer','B','R','Æ'],
+  ['nøtt','noett','N','T','Ø'],['ring','ring','R',null,'I'],['fisk','fisk','F','K',null],['eple','eple','E','E',null],['ape','ape','A','E',null],
+  ['ugle','ugle','U','E',null],['øye','oeye','Ø','E',null],['kake','kake','K','E',null],['nese','nese','N','E',null],['jakke','jakke','J','E',null],
+  ['løve','loeve','L','E',null],['vaffel','vaffel','V','L',null],['is','is','I','S',null],['ost','ost','O','T',null],['egg','egg','E','G',null],
+  ['ku','ku','K','U',null],['stol','stol','S','L',null],['sko','sko','S','O',null],['gris','gris','G','S',null],['hund','hund','H',null,null],
+  ['fugl','fugl','F',null,null],['måne','maane','M','E',null],['sekk','sekk','S','K','E'],['lue','lue','L','E','U'],['tre','tre','T','E',null],
+  ['klokke','klokke','K','E',null],['due','due','D','E','U'],['pose','pose','P','E',null],['ballong','ballong','B',null,null],
+  ['sitron','sitron','S','N',null],['banan','banan','B','N',null],['jente','jente','J','E',null],['zebra','zebra','Z','A',null],
+].map(([ord,fil,f,s,m])=>({ord,fil,f,s,m}));
 const STAVORD = [
   ['sol','sol',['SOL']],['hus','hus',['HUS']],['mus','mus',['MUS']],['katt','katt',['KATT']],['bil','bil',['BIL']],
   ['tre','tre',['TRE']],['sko','sko',['SKO']],['is','is',['IS']],['gris','gris',['GRIS']],['egg','egg',['EGG']],
@@ -308,54 +315,72 @@ function tallknapper(boks, fra, til, riktig, svar){
   boks.appendChild(rad);
 }
 
-/* ---------- KLOKKA ---------- */
+/* ---------- KLOKKA (nivå 1–6) ----------
+   1 hele timer · 2 halv · 3 kvart over · 4 kvart på · 5 alt blandet · 6 ettermiddag (24 t) */
 function klokkeTid(nivå){
-  if(nivå===1) return [8+rnd(5), 0];                   // 08:00–12:00
-  return Math.random()<.7 ? [8+rnd(4), 30] : [8+rnd(5), 0];   // mest halve, litt hele som kontrast
+  const r=Math.random();
+  if(nivå===1) return [8+rnd(5), 0];                                   // 08:00–12:00
+  if(nivå===2) return r<.7 ? [8+rnd(4),30] : [8+rnd(5),0];
+  if(nivå===3) return r<.6 ? [8+rnd(4),15] : [8+rnd(4),pick([0,30])];
+  if(nivå===4) return r<.6 ? [8+rnd(4),45] : [8+rnd(4),pick([0,15,30])];
+  if(nivå===5) return [8+rnd(4), pick([0,15,30,45])];
+  return [13+rnd(7), pick([0,15,30,45])];                              // 13:00–19:45
 }
 function andreTider(h,m,nivå,ant){
-  const ut=new Set([digital(h,m)]), liste=[];
-  const kandidater=[];
-  if(nivå>=2 && m===30) kandidater.push([h+1,30],[h,0],[h+1,0]);   // klassiske feil: «halv ni» = 09:30
-  for(let i=0;i<20;i++) kandidater.push(klokkeTid(nivå));
-  for(const [a,b] of kandidater){ if(a<1||a>23) continue; const d=digital(a,b); if(!ut.has(d)){ ut.add(d); liste.push([a,b]); } if(liste.length>=ant) break; }
+  const ut=new Set([digital(h,m)]), liste=[], kand=[];
+  if(m===30) kand.push([h+1,30],[h,0],[h+1,0]);   // «halv ni» er 08:30, ikke 09:30
+  if(m===15) kand.push([h,45],[h+1,15]);          // over/på byttes om
+  if(m===45) kand.push([h+1,45],[h,15]);          // «kvart på ni» er 08:45, ikke 09:45
+  if(nivå===6) kand.unshift([h-12,m]);            // 14:30 / 02:30
+  for(let i=0;i<30;i++) kand.push(klokkeTid(nivå));
+  for(const [a,b] of kand){ if(a<0||a>23) continue; const d=digital(a,b); if(!ut.has(d)){ ut.add(d); liste.push([a,b]); } if(liste.length>=ant) break; }
   return liste;
 }
+const ettermiddag = h => h>12;
 function forklarKlokke(boks,h,m){
-  boks.innerHTML=`<div class="do-forklar">${klokkeSVG(h,m,{str:150})}<div><p class="do-stor">${digital(h,m)}</p><p>Det heter <b>${klokkeOrd(h,m)}</b>.</p>
-    ${m===30?`<p>Den lange viseren peker rett ned på 6. Den korte står midt mellom ${h%12||12} og ${(h%12)+1}. Det er en halv time igjen til ${timeOrd(h+1)} – derfor heter det <b>halv ${timeOrd(h+1)}</b>.</p>`
-            :`<p>Den lange viseren peker rett opp på 12. Den korte peker på ${h%12||12}.</p>`}</div></div>`;
-  Lyd.leggTil([k('det-heter'), tid(h,m)]);
+  const t=h%12||12, neste=(h%12)+1;
+  let tekst;
+  if(m===0)  tekst=`Den lange viseren peker rett opp på 12. Den korte peker på ${t}.`;
+  if(m===30) tekst=`Den lange viseren peker rett ned på 6. Den korte står midt mellom ${t} og ${neste}. Det er en halv time igjen til ${timeOrd(h+1)} – derfor heter det <b>halv ${timeOrd(h+1)}</b>.`;
+  if(m===15) tekst=`Den lange viseren peker på 3. Det har gått et kvarter etter ${timeOrd(h)} – derfor heter det <b>kvart over ${timeOrd(h)}</b>.`;
+  if(m===45) tekst=`Den lange viseren peker på 9. Det er et kvarter igjen til ${timeOrd(h+1)} – derfor heter det <b>kvart på ${timeOrd(h+1)}</b>.`;
+  if(ettermiddag(h)) tekst+=` Etter klokka 12 teller den digitale klokka videre: ${t} om ettermiddagen er <b>${pad(h)}</b>.`;
+  boks.innerHTML=`<div class="do-forklar">${klokkeSVG(h,m,{str:150})}<div><p class="do-stor">${digital(h,m)}</p><p>Det heter <b>${klokkeOrd(h,m)}</b>${ettermiddag(h)?' om ettermiddagen':''}.</p><p>${tekst}</p></div></div>`;
+  Lyd.leggTil([k('det-heter'), tid(h,m), ettermiddag(h)?k('om-ettermiddagen'):null]);
 }
+const solmerke = h => ettermiddag(h) ? `<div class="do-solmerke">☀️ Ettermiddag</div>` : '';
 const KLOKKE = {
   les(nivå,K){ // analog → velg digital
     const [h,m]=klokkeTid(nivå);
-    return { tekst:`Se på fôringsklokka. Når kommer ${K.mat}ne?`, si:[k('klokke-les')],
-      tegn(boks,svar){ boks.innerHTML=`<div class="do-midt">${klokkeSVG(h,m)}</div>`;
+    return { tekst: ettermiddag(h) ? `Det er ettermiddag. Hvilken digital klokke viser det samme som fôringsklokka?` : `Se på fôringsklokka. Når kommer ${K.mat}ne?`,
+      si:[k(ettermiddag(h)?'klokke-les-ettermiddag':'klokke-les')],
+      tegn(boks,svar){ boks.innerHTML=`<div class="do-midt do-kolonne">${solmerke(h)}${klokkeSVG(h,m)}</div>`;
         const valg=[[h,m],...andreTider(h,m,nivå,2)].map(([a,b])=>digital(a,b));
         valgknapper(boks,valg,digital(h,m),svar,{html:v=>`<span class="do-digital">${v}</span>`}); },
-      forklar(boks){ forklarKlokke(boks,h,m); }, sjekk:[h,m] };
+      forklar(boks){ forklarKlokke(boks,h,m); } };
   },
-  ord(nivå,K){ // ord → velg analog
-    const [h,m]=klokkeTid(nivå), riktig=digital(h,m);
-    return { tekst:`${cap(K.dino)} skal få mat <b>${klokkeOrd(h,m)}</b>. Hvilken klokke viser det?`, si:[k(`e${K.id}-faar-mat`), tid(h,m), k('hvilken-klokke')],
+  ord(nivå,K){ // ord → velg klokke (analog, eller digital på nivå 6)
+    const [h,m]=klokkeTid(nivå), riktig=digital(h,m), em=ettermiddag(h);
+    return { tekst:`${cap(K.dino)} skal få mat <b>${klokkeOrd(h,m)}${em?' om ettermiddagen':''}</b>. Hvilken klokke viser det?`,
+      si:[k(`e${K.id}-faar-mat`), tid(h,m), em?k('om-ettermiddagen'):null, k('hvilken-klokke')],
       tegn(boks,svar){ const valg=[[h,m],...andreTider(h,m,nivå,2)];
+        if(em){ valgknapper(boks,valg.map(([a,b])=>digital(a,b)),riktig,svar,{html:v=>`<span class="do-digital">${v}</span>`}); return; }
         const rad=el('div','do-valg klokker');
-        shuffle(valg).forEach(([a,b])=>{ const k=el('button','do-knapp klokkeknapp',klokkeSVG(a,b,{str:150}));
-          k.onclick=()=>{ rad.querySelectorAll('button').forEach(x=>x.disabled=true); const ok=digital(a,b)===riktig; k.classList.add(ok?'rett':'feil'); svar(ok); };
-          rad.appendChild(k); });
+        shuffle(valg).forEach(([a,b])=>{ const kn=el('button','do-knapp klokkeknapp',klokkeSVG(a,b,{str:150}));
+          kn.onclick=()=>{ rad.querySelectorAll('button').forEach(x=>x.disabled=true); const ok=digital(a,b)===riktig; kn.classList.add(ok?'rett':'feil'); svar(ok); };
+          rad.appendChild(kn); });
         boks.appendChild(rad); },
       forklar(boks){ forklarKlokke(boks,h,m); } };
   },
   still(nivå,K){ // digital → still analog (viserne henger sammen)
-    const [h,m]=klokkeTid(nivå);
-    const startH = h===8?11:8;
+    const [h,m]=klokkeTid(nivå), startH=((h%12)===8)?11:8;
+    const steg = nivå>=3 ? 15 : 30;
     return { tekst:`Fôringa er klokka <span class="do-digital liten">${digital(h,m)}</span>. Dra den lange viseren og still klokka.`,
-      si:[k('foringa-er'), tid(h,m), k('dra-viseren')],
+      si:[k('foringa-er'), tid(h,m), ettermiddag(h)?k('om-ettermiddagen'):null, k('dra-viseren')],
       tegn(boks,svar){
         let tot=startH*60;
         boks.innerHTML=`<div class="do-midt do-still">${klokkeSVG(startH,0,{str:260,id:'doStill'})}</div>
-          <div class="do-valg"><button class="do-knapp liten" data-d="-30">◀ 30 min</button><button class="do-knapp go" data-ok>Ferdig</button><button class="do-knapp liten" data-d="30">30 min ▶</button></div>`;
+          <div class="do-valg"><button class="do-knapp liten" data-d="-${steg}">◀ ${steg} min</button><button class="do-knapp go" data-ok>Ferdig</button><button class="do-knapp liten" data-d="${steg}">${steg} min ▶</button></div>`;
         const svg=boks.querySelector('#doStill'), tim=svg.querySelector('.do-tim'), min=svg.querySelector('.do-min');
         const vis=()=>{ const mm=((tot%60)+60)%60, hh=Math.floor(tot/60); min.setAttribute('transform',`rotate(${mm*6})`); tim.setAttribute('transform',`rotate(${((hh%12)+mm/60)*30})`); };
         let drar=false, forrige=0;
@@ -369,34 +394,79 @@ const KLOKKE = {
       },
       forklar(boks){ forklarKlokke(boks,h,m); } };
   },
-  navn(nivå,K){ // analog → hva heter klokka (halv-fella)
-    const h=8+rnd(4), m=30;
-    const riktig=klokkeOrd(h,m), valg=[riktig, `halv ${timeOrd(h)}`, `klokka ${timeOrd(h)}`];
+  navn(nivå,K){ // analog → hva heter klokka (fellene: halv ni / kvart på)
+    let h,m; do { [h,m]=klokkeTid(Math.min(nivå,5)); } while(m===0 && nivå>1 && Math.random()<.7);
+    const riktig=klokkeOrd(h,m), kand=[klokkeOrd(h+1,m), klokkeOrd(h,(m+30)%60), klokkeOrd(h-1,m), klokkeOrd(h,0), klokkeOrd(h+1,0)];
+    if(m===45) kand.unshift(`kvart på ${timeOrd(h)}`);
+    if(m===30) kand.unshift(`halv ${timeOrd(h)}`);
+    const valg=[riktig, ...[...new Set(kand)].filter(x=>x!==riktig).slice(0,2)];
     return { tekst:`Hva heter klokka på fôringstavla?`, si:[k('hva-heter-klokka')],
-      tegn(boks,svar){ boks.innerHTML=`<div class="do-midt">${klokkeSVG(h,m)}</div>`;
-        valgknapper(boks,valg,riktig,svar); },
+      tegn(boks,svar){ boks.innerHTML=`<div class="do-midt">${klokkeSVG(h,m)}</div>`; valgknapper(boks,valg,riktig,svar); },
       forklar(boks){ forklarKlokke(boks,h,m); } };
   },
-};
-function lagKlokke(nivå,K){ const typer=nivå===1?['les','ord','still']:['les','ord','still','navn','navn']; return KLOKKE[pick(typer)](nivå,K); }
-
-/* ---------- PENGER ---------- */
-function forklarSum(boks,mynter,pris){
-  const sum=mynter.reduce((a,b)=>a+b,0);
-  boks.innerHTML=`<div class="do-forklar"><div class="do-myntrad">${mynter.map(myntSVG).join('')||'<i>ingen mynter</i>'}</div>
-    <div><p>${mynter.length?mynter.join(' + ')+' = <b>'+sum+' kr</b>':'Du la ikke på noen mynter.'}</p>
-    ${pris!=null?`<p>Prisen er <b>${pris} kr</b>. ${sum<pris?`Det mangler <b>${pris-sum} kr</b>.`:sum>pris?`Det er <b>${sum-pris} kr</b> for mye.`:'Det stemmer!'}</p>`:''}</div></div>`;
-}
-function myntForslag(pris){ const ut=[]; let r=pris; for(const v of [20,10,5,1]) while(r>=v){ ut.push(v); r-=v; } return ut; }
-const PENGER = {
-  finn(){ // trykk på riktig mynt
-    const mål=pick([1,5,10,20]);
-    const liste=shuffle([mål, ...shuffle([1,5,10,20,1,5,10,20].filter(v=>v!==mål)).slice(0,4)]);
-    return { tekst:`Kiosken trenger en <b>${mål}-krone</b>. Trykk på den.`, si:[k('kiosken-trenger'), k(`mynt-${mål}`), k('trykk-paa-den')],
-      tegn(boks,svar){ const rad=el('div','do-valg mynter');
-        liste.forEach(v=>{ const b=el('button','do-knapp myntknapp',myntSVG(v)); b.onclick=()=>{ rad.querySelectorAll('button').forEach(x=>x.disabled=true); b.classList.add(v===mål?'rett':'feil'); svar(v===mål); }; rad.appendChild(b); });
+  rekkefølge(nivå,K){ // sorter tre klokker, tidligst først
+    const tider=[]; while(tider.length<3){ const t=klokkeTid(5); if(!tider.some(x=>x[0]===t[0]&&x[1]===t[1])) tider.push(t); }
+    const sortert=tider.slice().sort((a,b)=>(a[0]*60+a[1])-(b[0]*60+b[1]));
+    const hendelser=['Fôring','Bading','Leketid'];
+    return { tekst:`Hva skjer først i dag? Trykk på klokkene i riktig rekkefølge – den tidligste først.`, si:[k('rekkefolge')],
+      tegn(boks,svar){ const rad=el('div','do-valg klokker'); const valgt=[];
+        shuffle(tider).forEach((t,i)=>{ const kn=el('button','do-knapp klokkeknapp do-sorter',`${klokkeSVG(t[0],t[1],{str:140})}<span class="do-sortnr"></span>`);
+          kn.onclick=()=>{ if(kn.dataset.n) return; valgt.push(t); kn.dataset.n=valgt.length; kn.querySelector('.do-sortnr').textContent=valgt.length; Lyd.pip(true);
+            if(valgt.length===3){ rad.querySelectorAll('button').forEach(x=>x.disabled=true); svar(valgt.every((x,j)=>x===sortert[j])); } };
+          rad.appendChild(kn); });
         boks.appendChild(rad); },
-      forklar(boks){ boks.innerHTML=`<div class="do-forklar"><div class="do-myntrad">${myntSVG(mål)}</div><div><p>Dette er en <b>${mål}-krone</b>. ${mål>=10?'10- og 20-kronene er gull.':'1- og 5-kronene er sølv og har hull i midten.'}</p></div></div>`; } };
+      forklar(boks){ boks.innerHTML=`<div class="do-forklar">${sortert.map((t,i)=>`<div class="do-kolonne"><b>${i+1}. ${hendelser[i]}</b>${klokkeSVG(t[0],t[1],{str:110})}<span>${digital(t[0],t[1])}</span></div>`).join('')}</div><p class="do-tips">Se på den korte viseren først: den viser timen.</p>`; } };
+  },
+};
+const KLOKKETYPER = { 1:['les','ord','still'], 2:['les','ord','still','navn','navn'], 3:['les','ord','still','navn'], 4:['les','ord','still','navn'], 5:['les','ord','still','navn','rekkefølge'], 6:['les','ord','still','les'] };
+function lagKlokke(nivå,K){ return KLOKKE[pick(KLOKKETYPER[nivå])](nivå,K); }
+
+/* ---------- PENGER (nivå 1–6) ----------
+   1 kjenn myntene · 2 betal til 50 kr · 3 sedler til 200 kr · 4 vekslebua · 5 til 500 kr · 6 penger tilbake
+   Fra nivå 3 er alle beløp hele femmere, så tallene kan leses opp med få innleste klipp. */
+const SEDDEL = { 50:{lys:'#d3e8c8',mørk:'#3f7a3a'}, 100:{lys:'#f4cdc6',mørk:'#a8352c'}, 200:{lys:'#cddcf1',mørk:'#2f5f9e'}, 500:{lys:'#f1d5bd',mørk:'#9a4f22'} };   // farger: bytt her
+function seddelSVG(v){
+  const c=SEDDEL[v];
+  return `<svg class="do-seddel" width="124" height="66" viewBox="0 0 124 66" aria-label="${v} kroner">
+    <rect x="2" y="2" width="120" height="62" rx="8" fill="${c.lys}" stroke="${c.mørk}" stroke-width="4"/>
+    <rect x="10" y="10" width="104" height="46" rx="5" fill="none" stroke="${c.mørk}" stroke-width="1.5" stroke-dasharray="3 3"/>
+    <circle cx="32" cy="33" r="14" fill="${c.mørk}" opacity=".22"/><path d="M24 38 q8 -12 16 0" stroke="${c.mørk}" stroke-width="2" fill="none" opacity=".5"/>
+    <text x="84" y="44" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="30" fill="${c.mørk}">${v}</text></svg>`;
+}
+const penge = v => v>=50 ? seddelSVG(v) : myntSVG(v);
+const VALØRER = [500,200,100,50,20,10,5,1];
+function færrest(n){ const ut=[]; for(const v of VALØRER) while(n>=v){ ut.push(v); n-=v; } return ut; }
+function myntForslag(pris){ return færrest(pris); }
+const sum = a => a.reduce((x,y)=>x+y,0);
+/* Kronebeløp som lydklipp: 0–50, femmere til 95, og «to hundre og …» */
+function siKr(n){
+  if(n<100) return [{tall:n}];
+  const h=Math.floor(n/100), r=n%100;
+  return r ? [k(`hundre-og-${h}`), {tall:r}] : [k(`hundre-${h}`)];
+}
+const pengenavn = v => v>=50 ? `${v}-lapp` : `${v}-krone`;
+const pengeklipp = v => k(v>=50 ? `seddel-${v}` : `mynt-${v}`);
+function forklarSum(boks,biter,pris){
+  const s=sum(biter);
+  boks.innerHTML=`<div class="do-forklar"><div class="do-myntrad">${biter.map(penge).join('')||'<i>ingenting</i>'}</div>
+    <div><p>${biter.length?biter.join(' + ')+' = <b>'+s+' kr</b>':'Du la ikke på noe.'}</p>
+    ${pris!=null?`<p>Prisen er <b>${pris} kr</b>. ${s<pris?`Det mangler <b>${pris-s} kr</b>.`:s>pris?`Det er <b>${s-pris} kr</b> for mye.`:'Det stemmer!'}</p>`:''}</div></div>`;
+}
+function pris(nivå){
+  if(nivå<=2) return 3+rnd(48);                       // 3–50
+  if(nivå===3) return 5*(11+rnd(30));                 // 55–200
+  return 5*(11+rnd(90));                              // 55–500
+}
+const LOMMEBOK = { 2:[1,5,10,20], 3:[5,10,20,50,100,200], 5:[5,10,20,50,100,200,500] };
+const PENGER = {
+  finn(nivå){ // trykk på riktig mynt/seddel
+    const utvalg = nivå===1 ? [1,5,10,20] : [10,20,50,100,200,...(nivå>=5?[500]:[])];
+    const mål=pick(utvalg), liste=shuffle([mål, ...shuffle(utvalg.filter(v=>v!==mål)).slice(0,4)]);
+    return { tekst:`Kiosken trenger en <b>${pengenavn(mål)}</b>. Trykk på den.`, si:[k('kiosken-trenger'), pengeklipp(mål), k('trykk-paa-den')],
+      tegn(boks,svar){ const rad=el('div','do-valg mynter');
+        liste.forEach(v=>{ const b=el('button','do-knapp myntknapp',penge(v)); b.onclick=()=>{ rad.querySelectorAll('button').forEach(x=>x.disabled=true); b.classList.add(v===mål?'rett':'feil'); svar(v===mål); }; rad.appendChild(b); });
+        boks.appendChild(rad); },
+      forklar(boks){ boks.innerHTML=`<div class="do-forklar"><div class="do-myntrad">${penge(mål)}</div><div><p>Dette er en <b>${pengenavn(mål)}</b>. ${mål>=50?'Sedlene har hver sin farge.':mål>=10?'10- og 20-kronene er gull.':'1- og 5-kronene er sølv og har hull i midten.'}</p></div></div>`; } };
   },
   verdi(){ // hvor mye er mynten verdt
     const v=pick([1,5,10,20]);
@@ -404,50 +474,91 @@ const PENGER = {
       tegn(boks,svar){ boks.innerHTML=`<div class="do-midt do-stormynt">${myntSVG(v)}</div>`; valgknapper(boks,[1,5,10,20],v,svar,{html:x=>`${x} kr`}); },
       forklar(boks){ boks.innerHTML=`<div class="do-forklar"><div class="do-myntrad">${myntSVG(v)}</div><div><p>Tallet på mynten viser hva den er verdt: <b>${v} kroner</b>.</p></div></div>`; } };
   },
-  betal(nivå,K){ // legg nøyaktig beløp på disken
-    const [vare,ikon]=pick(K.kiosk), pris=3+rnd(48);
+  betal(nivå,K,{fåsteMulig=false}={}){ // legg nøyaktig beløp på disken
+    const [vare,ikon]=pick(K.kiosk), p=pris(nivå), lommebok=LOMMEBOK[nivå>=5?5:nivå>=3?3:2];
     let lagt=[];
-    return { tekst:`<span class="do-vare">${ikon}</span> ${vare} koster <b>${pris} kr</b>. Legg nøyaktig ${pris} kr på disken.`,
-      si:[k(`vare-${slug(vare)}`), k('koster'), {tall:pris}, k('kroner'), k('legg-noyaktig'), {tall:pris}, k('kroner-paa-disken')],
+    const tekst = fåsteMulig ? `<span class="do-vare">${ikon}</span> Betal <b>${p} kr</b> for ${vare.toLowerCase()} med <b>så få mynter og sedler som mulig</b>.`
+                             : `<span class="do-vare">${ikon}</span> ${vare} koster <b>${p} kr</b>. Legg nøyaktig ${p} kr på disken.`;
+    const si = fåsteMulig ? [k('betal'), ...siKr(p), k('faa-som-mulig')]
+                          : [k(`vare-${slug(vare)}`), k('koster'), ...siKr(p), k('kroner'), k('legg-noyaktig'), ...siKr(p), k('kroner-paa-disken')];
+    return { tekst, si,
       tegn(boks,svar){
         lagt=[];
-        boks.innerHTML=`<div class="do-disk"><div class="do-disktopp">Disken <span class="do-sum">0 kr</span></div><div class="do-myntrad" data-disk></div></div>
-          <div class="do-lommebok">${[1,5,10,20].map(v=>`<button class="do-knapp myntknapp" data-v="${v}">${myntSVG(v)}</button>`).join('')}</div>
-          <p class="do-tips">Trykk på en mynt for å legge den på disken. Trykk på mynten på disken for å ta den tilbake.</p>
+        boks.innerHTML=`<div class="do-disk"><div class="do-disktopp">Disken <span class="do-sum">${fåsteMulig?'':'0 kr'}</span></div><div class="do-myntrad" data-disk></div></div>
+          <div class="do-lommebok">${lommebok.map(v=>`<button class="do-knapp myntknapp" data-v="${v}">${penge(v)}</button>`).join('')}</div>
+          <p class="do-tips">Trykk for å legge på disken. Trykk på disken for å ta tilbake.</p>
           <div class="do-valg"><button class="do-knapp go" data-ok>Betal</button></div>`;
-        const disk=boks.querySelector('[data-disk]'), sum=boks.querySelector('.do-sum');
-        const vis=()=>{ disk.innerHTML=lagt.map((v,i)=>`<button class="do-knapp myntknapp liten" data-i="${i}">${myntSVG(v)}</button>`).join(''); sum.textContent=lagt.reduce((a,b)=>a+b,0)+' kr'; };
+        const disk=boks.querySelector('[data-disk]'), s=boks.querySelector('.do-sum');
+        const vis=()=>{ disk.innerHTML=lagt.map((v,i)=>`<button class="do-knapp myntknapp liten" data-i="${i}">${penge(v)}</button>`).join(''); if(!fåsteMulig || lagt.length) s.textContent=sum(lagt)+' kr'; };
         boks.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{ if(lagt.length<20){ lagt.push(+b.dataset.v); lagt.sort((a,b)=>b-a); vis(); } });
         disk.onclick=ev=>{ const b=ev.target.closest('[data-i]'); if(b){ lagt.splice(+b.dataset.i,1); vis(); } };
-        boks.querySelector('[data-ok]').onclick=()=>{ if(!lagt.length) return; boks.querySelectorAll('button').forEach(x=>x.disabled=true); svar(lagt.reduce((a,b)=>a+b,0)===pris); };
+        boks.querySelector('[data-ok]').onclick=()=>{ if(!lagt.length) return; boks.querySelectorAll('button').forEach(x=>x.disabled=true);
+          svar(sum(lagt)===p && (!fåsteMulig || lagt.length===færrest(p).length)); };
       },
-      forklar(boks){ forklarSum(boks,lagt,pris); boks.insertAdjacentHTML('beforeend',`<p class="do-tips">Én måte å betale ${pris} kr på: ${myntForslag(pris).join(' + ')}.</p>`); } };
+      forklar(boks){ forklarSum(boks,lagt,p);
+        const f=færrest(p);
+        boks.insertAdjacentHTML('beforeend', fåsteMulig && sum(lagt)===p
+          ? `<p class="do-tips">Riktig beløp – men det går med færre: <b>${f.join(' + ')}</b> (${f.length} stykker). Ta den største først.</p>`
+          : `<p class="do-tips">Én måte å betale ${p} kr på: ${f.join(' + ')}. Ta den største først.</p>`); } };
   },
-  tell(){ // hvor mye ligger i kassa
-    const n=2+rnd(3); let m=[]; for(let i=0;i<n;i++) m.push(pick([1,5,10,20])); m.sort((a,b)=>b-a);
-    while(m.reduce((a,b)=>a+b,0)>50) m.shift();
-    const sum=m.reduce((a,b)=>a+b,0);
-    const valg=[...new Set([sum, sum+pick([1,5,10]), Math.max(1,sum-pick([1,5,10])), sum+pick([2,4])])].slice(0,3);
+  tell(nivå){ // hvor mye ligger i kassa
+    const valører = nivå<=2 ? [1,5,10,20] : nivå<=4 ? [5,10,20,50,100] : [10,20,50,100,200];
+    const grense = nivå<=2 ? 50 : nivå<=4 ? 200 : 500;
+    let m=[]; const n=nivå<=2?2+rnd(3):3+rnd(3); for(let i=0;i<n;i++) m.push(pick(valører)); m.sort((a,b)=>b-a);
+    while(sum(m)>grense) m.shift();
+    const s=sum(m), steg=nivå<=2?[1,5,10]:[5,10,50];
+    const valg=[...new Set([s, s+pick(steg), Math.max(1,s-pick(steg)), s+pick(steg)*2])].filter(x=>x>0).slice(0,3);
     return { tekst:`Hvor mye penger ligger i kassa?`, si:[k('hvor-mye-kassa')],
-      tegn(boks,svar){ boks.innerHTML=`<div class="do-midt do-myntrad stor">${m.map(myntSVG).join('')}</div>`; valgknapper(boks,valg,sum,svar,{html:x=>`${x} kr`}); },
-      forklar(boks){ forklarSum(boks,m,null); boks.insertAdjacentHTML('beforeend','<p class="do-tips">Tips: tell de største myntene først.</p>'); } };
+      tegn(boks,svar){ boks.innerHTML=`<div class="do-midt do-myntrad stor">${m.map(penge).join('')}</div>`; valgknapper(boks,valg,s,svar,{html:x=>`${x} kr`}); },
+      forklar(boks){ forklarSum(boks,m,null); boks.insertAdjacentHTML('beforeend','<p class="do-tips">Tips: tell de største først.</p>'); } };
+  },
+  veksle(){ // hvor mange får du for en seddel?
+    const par=[[50,10],[50,5],[100,10],[100,20],[100,50],[200,20],[200,50],[200,100],[500,100]], [S,v]=pick(par), n=S/v;
+    const flertall={5:'femkroner',10:'tikroner',20:'tjuekroner',50:'femtilapper',100:'hundrelapper'}[v];
+    return { tekst:`Vekslebua: Du har en <b>${S}-lapp</b>. Hvor mange <b>${flertall}</b> får du for den?`, si:[k('du-har-en'), k(`seddel-${S}`), k('hvor-mange'), k(`flere-${v}`), k('faar-du-vekslebua')],
+      tegn(boks,svar){ boks.innerHTML=`<div class="do-midt do-myntrad stor">${seddelSVG(S)} <span class="do-pil">→</span> ${penge(v)} <b class="do-stor">?</b></div>`; tallknapper(boks,1,10,n,svar); },
+      forklar(boks){ boks.innerHTML=`<div class="do-forklar"><div class="do-myntrad">${Array(n).fill(penge(v)).join('')}</div><div><p>${Array(n).fill(v).join(' + ')} = <b>${S} kr</b></p><p>Du får <b>${n}</b> ${flertall}.</p></div></div>`; } };
+  },
+  haug(){ // hvilken haug er like mye verdt som seddelen?
+    const S=pick([50,100,200]), valører=S===50?[5,10,20]:[10,20,50];
+    const lagHaug=mål=>{ const h=[]; let r=mål; while(r>0){ const v=pick(valører.filter(x=>x<=r)); h.push(v); r-=v; } return h.sort((a,b)=>b-a); };
+    const riktig=lagHaug(S), feil1=lagHaug(S+pick(valører)), feil2=lagHaug(S-pick(valører.filter(x=>x<S)));
+    const hauger=shuffle([riktig,feil1,feil2]);
+    return { tekst:`Vekslebua: Hvilken haug er like mye verdt som en <b>${S}-lapp</b>?`, si:[k('hvilken-haug'), k(`seddel-${S}`)],
+      tegn(boks,svar){ boks.innerHTML=`<div class="do-midt">${seddelSVG(S)}</div>`; const rad=el('div','do-valg hauger');
+        hauger.forEach(h=>{ const b=el('button','do-knapp haugknapp',`<div class="do-myntrad">${h.map(penge).join('')}</div>`); b.onclick=()=>{ rad.querySelectorAll('button').forEach(x=>x.disabled=true); b.classList.add(h===riktig?'rett':'feil'); svar(h===riktig); }; rad.appendChild(b); });
+        boks.appendChild(rad); },
+      forklar(boks){ boks.innerHTML=`<div class="do-forklar">${hauger.map(h=>`<div class="do-kolonne"><div class="do-myntrad">${h.map(penge).join('')}</div><b>${h.join(' + ')} = ${sum(h)} kr</b>${h===riktig?' ✓':''}</div>`).join('')}</div>`; } };
+  },
+  tilbake(nivå,K){ // hvor mye får du tilbake?
+    const [vare,ikon]=pick(K.kiosk);
+    const S=pick([50,100,200,500]); const p=5*(1+rnd(S/5-1)); const t=S-p;
+    const valg=[...new Set([t, t+pick([5,10]), Math.max(5,t-pick([5,10])), t+20])].filter(x=>x>0&&x!==p).slice(0,3);
+    if(!valg.includes(t)) valg[0]=t;
+    return { tekst:`<span class="do-vare">${ikon}</span> ${vare} koster <b>${p} kr</b>. Du betaler med en <b>${S}-lapp</b>. Hvor mye får du tilbake?`,
+      si:[k(`vare-${slug(vare)}`), k('koster'), ...siKr(p), k('kroner'), k('du-betaler-med'), k(`seddel-${S}`), k('hvor-mye-tilbake')],
+      tegn(boks,svar){ boks.innerHTML=`<div class="do-midt do-myntrad stor">${seddelSVG(S)}</div>`; valgknapper(boks,valg,t,svar,{html:x=>`${x} kr`}); },
+      forklar(boks){ boks.innerHTML=`<div class="do-forklar"><div><p class="do-stor">${S} − ${p} = ${t}</p><p>Tell oppover fra prisen: fra ${p} kr til ${S} kr er det <b>${t} kr</b>.</p><div class="do-myntrad">${færrest(t).map(penge).join('')}</div></div></div>`;
+        Lyd.leggTil(siKr(t).concat([k('kroner')])); } };
   },
 };
-function lagPenger(nivå,K){ return nivå===1 ? PENGER[pick(['finn','finn','verdi'])](nivå,K) : PENGER[pick(['betal','betal','tell'])](nivå,K); }
+const PENGETYPER = { 1:['finn','finn','verdi'], 2:['betal','betal','tell'], 3:['finn','betal','betal','tell'], 4:['veksle','veksle','haug'], 5:['betal','tell','faa'], 6:['tilbake','tilbake','betal'] };
+function lagPenger(nivå,K){ const t=pick(PENGETYPER[nivå]); return t==='faa' ? PENGER.betal(5,K,{fåsteMulig:true}) : PENGER[t](nivå,K); }
 
-/* ---------- 10-ER-VENNER ---------- */
+/* ---------- 10-ER-VENNER (nivå 1–5) ----------
+   1 se mengden · 2 hvor mange mangler · 3 bare tall · 4 vennepar · 5 100-venner */
 const TIER = {
   hvorMange(){ const n=1+rnd(10);
-    const valg=shuffle([...new Set([n, ...shuffle([n-1,n+1,n-2,n+2,10-n].filter(v=>v>=0&&v<=10&&v!==n))])]).slice(0,4);
+    let valg=shuffle([...new Set([n, ...shuffle([n-1,n+1,n-2,n+2,10-n].filter(v=>v>=0&&v<=10&&v!==n))])]).slice(0,4);
     if(!valg.includes(n)) valg[0]=n;
     return { tekst:`Hvor mange egg ligger i rugekassa?`, si:[k('hvor-mange-egg')],
       tegn(boks,svar){ boks.innerHTML=`<div class="do-midt">${eggkasse(n)}</div>`; valgknapper(boks,valg,n,svar,{stor:true}); },
       forklar(boks){ boks.innerHTML=`<div class="do-forklar">${eggkasse(n)}<div><p>${n>=5?`Øverste rad er full – det er <b>5</b>. ${n>5?`Pluss ${n-5} nederst blir <b>${n}</b>.`:''}`:`Det ligger <b>${n}</b> egg.`}</p></div></div>`; } };
   },
-  legg(nivå,K){ const n=2+rnd(9);
+  legg(){ const n=2+rnd(9);
     return { tekst:`Legg <b>${n}</b> egg i rugekassa. Trykk på rutene.`, si:[k('legg'), {tall:n}, k('egg-i-rugekassa')],
       tegn(boks,svar){ boks.innerHTML=`<div class="do-midt">${eggkasse(0)}</div><div class="do-valg"><button class="do-knapp go" data-ok>Ferdig</button></div>`;
-        let fylt=new Set();
+        const fylt=new Set();
         boks.querySelectorAll('.do-rute').forEach(r=>r.onclick=()=>{ const i=+r.dataset.i; if(fylt.has(i)){ fylt.delete(i); r.classList.remove('full'); r.innerHTML=''; } else { fylt.add(i); r.classList.add('full'); r.innerHTML='<span class="do-egg"></span>'; } });
         boks.querySelector('[data-ok]').onclick=()=>{ boks.querySelectorAll('button,.do-rute').forEach(x=>{x.disabled=true; x.onclick=null;}); svar(fylt.size===n); }; },
       forklar(boks){ boks.innerHTML=`<div class="do-forklar">${eggkasse(n)}<div><p>${n} egg ser slik ut. ${n>=5?`En full rad (5) ${n>5?`og ${n-5} til`:''}.`:''}</p></div></div>`; } };
@@ -459,44 +570,116 @@ const TIER = {
       tegn(boks,svar){ boks.innerHTML=`<div class="do-midt">${eggkasse(n,{ikon})}</div>`; tallknapper(boks,0,10,10-n,svar); },
       forklar(boks){ boks.innerHTML=`<div class="do-forklar">${eggkasse(n,{ikon,fremhev:true})}<div><p>Tell de tomme rutene: det mangler <b>${10-n}</b>.</p><p class="do-stor">${n} + ${10-n} = 10</p><p>${n} og ${10-n} er 10-er-venner!</p></div></div>`; } };
   },
-  venn(nivå,K){ const n=1+rnd(9);
+  venn(){ const n=1+rnd(9);
     return { tekst:`<span class="do-stor">${n} + ? = 10</span><br>Finn 10-er-vennen til ${n}.`, si:[{tall:n}, k('pluss-hva-blir-ti')],
       tegn(boks,svar){ boks.innerHTML=`<div class="do-midt">${eggkasse(n)}</div>`; tallknapper(boks,0,10,10-n,svar); },
       forklar(boks){ boks.innerHTML=`<div class="do-forklar">${eggkasse(n,{fremhev:true})}<div><p class="do-stor">${n} + ${10-n} = 10</p></div></div>`; } };
   },
+  bareTall(){ // uten tierramme – den kan hentes fram som hjelp
+    const n=1+rnd(9), snu=Math.random()<.4;
+    return { tekst:`<span class="do-stor">${snu?`? + ${n}`:`${n} + ?`} = 10</span>`, si:[{tall:n}, k('pluss-hva-blir-ti')],
+      tegn(boks,svar){ boks.innerHTML=`<div class="do-midt do-kolonne"><div data-hjelp></div><button class="do-knapp liten" data-vis>🥚 Vis rugekassa</button></div>`;
+        boks.querySelector('[data-vis]').onclick=e=>{ boks.querySelector('[data-hjelp]').innerHTML=eggkasse(n); e.currentTarget.remove(); };
+        tallknapper(boks,0,10,10-n,svar); },
+      forklar(boks){ boks.innerHTML=`<div class="do-forklar">${eggkasse(n,{fremhev:true})}<div><p class="do-stor">${n} + ${10-n} = 10</p></div></div>`; } };
+  },
+  vennepar(){ // finn de to eggene som blir 10 sammen
+    const a=1+rnd(9), b=10-a, tall=[a,b];
+    while(tall.length<5){ const x=1+rnd(9); if(!tall.includes(x) && !tall.includes(10-x)) tall.push(x); }
+    const egg=shuffle(tall);
+    return { tekst:`Finn de <b>to</b> eggene som blir <b>10</b> til sammen.`, si:[k('finn-to-ti')],
+      tegn(boks,svar){ const rad=el('div','do-valg do-eggrad'); const valgt=[];
+        egg.forEach(x=>{ const kn=el('button','do-tallegg',`<span>${x}</span>`);
+          kn.onclick=()=>{ if(valgt.includes(kn)){ valgt.splice(valgt.indexOf(kn),1); kn.classList.remove('valgt'); return; }
+            valgt.push(kn); kn.classList.add('valgt'); Lyd.pip(true);
+            if(valgt.length===2){ rad.querySelectorAll('button').forEach(y=>y.disabled=true); const ok=sum(valgt.map(y=>+y.textContent))===10; valgt.forEach(y=>y.classList.add(ok?'rett':'feil')); svar(ok); } };
+          rad.appendChild(kn); });
+        boks.appendChild(rad); },
+      forklar(boks){ boks.innerHTML=`<div class="do-forklar">${eggkasse(a,{fremhev:true})}<div><p class="do-stor">${a} + ${b} = 10</p><p>${a} og ${b} er 10-er-venner.</p></div></div>`; } };
+  },
+  hundre(){ // 100-venner med tiere
+    const n=10*(1+rnd(9));
+    const kasser=t=>`<div class="do-hundre">${Array.from({length:10},(_,i)=>`<i class="${i<t/10?'full':''}"></i>`).join('')}</div>`;
+    return { tekst:`<span class="do-stor">${n} + ? = 100</span><br>Hver stav er en full eggkasse med 10 egg.`, si:[{tall:n}, k('pluss-hva-blir-hundre')],
+      tegn(boks,svar){ boks.innerHTML=`<div class="do-midt">${kasser(n)}</div>`;
+        const rad=el('div','do-tallpad'); for(let v=0;v<=100;v+=10){ const b=el('button','do-knapp tall',String(v)); b.onclick=()=>{ rad.querySelectorAll('button').forEach(x=>x.disabled=true); b.classList.add(v===100-n?'rett':'feil'); svar(v===100-n); }; rad.appendChild(b); }
+        boks.appendChild(rad); },
+      forklar(boks){ boks.innerHTML=`<div class="do-forklar">${kasser(n)}<div><p class="do-stor">${n} + ${100-n} = 100</p><p>${n/10} + ${10-n/10} = 10, så ${n} + ${100-n} = 100.</p></div></div>`; } };
+  },
 };
-function lagTier(nivå,K){ return nivå===1 ? TIER[pick(['hvorMange','hvorMange','legg'])](nivå,K) : TIER[pick(['mangler','mangler','venn'])](nivå,K); }
+const TIERTYPER = { 1:['hvorMange','hvorMange','legg'], 2:['mangler','mangler','venn'], 3:['bareTall','bareTall','mangler'], 4:['vennepar','vennepar','bareTall'], 5:['hundre','hundre','vennepar'] };
+function lagTier(nivå,K){ return TIER[pick(TIERTYPER[nivå])](nivå,K); }
 
-/* ---------- LYDER (første lyd) ---------- */
-function forklarLyd(boks,o){
-  boks.innerHTML=`<div class="do-forklar">${imgFor(o.fil)}<div><p class="do-stor"><b class="do-uthev">${o.ord.charAt(0).toUpperCase()}</b>${o.ord.slice(1).toUpperCase()}</p><p><b>${cap(o.ord)}</b> begynner med lyden <b>${o.f}</b>.</p>
+/* ---------- LYDER (nivå 1–5) ----------
+   1 første lyd (2 valg) · 2 første lyd (4 valg) · 3 siste lyd · 4 lyden i midten · 5 fotsporboksene */
+const VOKALER = 'AEIOUYÆØÅ'.split('');
+const ordLyd = o => ({ord:o.fil, reserve:o.ord});
+function forklarLyd(boks,o,pos='f'){
+  const b=o[pos], ord=o.ord.toUpperCase();
+  const i = pos==='f' ? 0 : pos==='s' ? ord.lastIndexOf(b) : ord.indexOf(b,1);
+  const vist = ord.split('').map((c,j)=>j===i?`<b class="do-uthev">${c}</b>`:c).join('');
+  const tekst = pos==='f' ? `begynner med lyden <b>${b}</b>` : pos==='s' ? `slutter med lyden <b>${b}</b>` : `har lyden <b>${b}</b> i midten`;
+  boks.innerHTML=`<div class="do-forklar">${imgFor(o.fil)}<div><p class="do-stor">${vist}</p><p><b>${cap(o.ord)}</b> ${tekst}.</p>
     <button class="do-knapp liten" data-hør>🔊 Hør igjen</button></div></div>`;
-  boks.querySelector('[data-hør]').onclick=()=>Lyd.spill([{ord:o.fil,reserve:o.ord},{pause:250},k('begynner-med'),{bokstav:o.f}]);
-  Lyd.leggTil([{ord:o.fil,reserve:o.ord},{pause:250},k('begynner-med'),{bokstav:o.f}]);
+  const lyd=[ordLyd(o),{pause:250},k(pos==='f'?'begynner-med':pos==='s'?'slutter-med':'har-i-midten'),{bokstav:b}];
+  boks.querySelector('[data-hør]').onclick=()=>Lyd.spill(lyd);
+  Lyd.leggTil(lyd);
 }
 const LYDER = {
   første(nivå){
     const o=pick(LYDORD), ant=nivå===1?2:4;
     const valg=[o.f, ...shuffle(BOKSTAVER.filter(b=>b!==o.f)).slice(0,ant-1)];
-    return { tekst:`Hvilken lyd hører du <b>først</b>?`, si:[k('hvilken-lyd-forst'), {ord:o.fil,reserve:o.ord}],
+    return { tekst:`Hvilken lyd hører du <b>først</b>?`, si:[k('hvilken-lyd-forst'), ordLyd(o)],
       tegn(boks,svar){ boks.innerHTML=`<div class="do-midt">${imgFor(o.fil)}</div><div class="do-valg"><button class="do-knapp liten" data-hør>🔊 Hør ordet</button></div>`;
-        boks.querySelector('[data-hør]').onclick=()=>Lyd.spill({ord:o.fil,reserve:o.ord});
+        boks.querySelector('[data-hør]').onclick=()=>Lyd.spill(ordLyd(o));
         valgknapper(boks,valg,o.f,svar,{stor:true}); },
-      forklar(boks){ forklarLyd(boks,o); } };
+      forklar(boks){ forklarLyd(boks,o,'f'); } };
   },
   kresen(nivå,K){ // tre bilder, ett begynner med lyden
-    const o=pick(LYDORD);
-    const andre=shuffle(LYDORD.filter(x=>x.f!==o.f)).slice(0,2), alle=shuffle([o,...andre]);
+    const o=pick(LYDORD), andre=shuffle(LYDORD.filter(x=>x.f!==o.f)).slice(0,2), alle=shuffle([o,...andre]);
     return { tekst:`${cap(K.dinoEn)} er kresen! Den vil bare spise ting som begynner med <b class="do-uthev">${o.f}</b>.`,
-      si:[k(`e${K.id}-kresen`), {bokstav:o.f}, {pause:400}, ...alle.flatMap(x=>[{ord:x.fil,reserve:x.ord},{pause:300}])],
+      si:[k(`e${K.id}-kresen`), {bokstav:o.f}, {pause:400}, ...alle.flatMap(x=>[ordLyd(x),{pause:300}])],
       tegn(boks,svar){ const rad=el('div','do-valg bilder');
-        alle.forEach(x=>{ const b=el('button','do-knapp bildeknapp',imgFor(x.fil)); b.onclick=()=>{ rad.querySelectorAll('button').forEach(y=>y.disabled=true); b.classList.add(x===o?'rett':'feil'); Lyd.spill({ord:x.fil,reserve:x.ord}); svar(x===o); }; rad.appendChild(b); });
+        alle.forEach(x=>{ const b=el('button','do-knapp bildeknapp',imgFor(x.fil)); b.onclick=()=>{ rad.querySelectorAll('button').forEach(y=>y.disabled=true); b.classList.add(x===o?'rett':'feil'); Lyd.spill(ordLyd(x)); svar(x===o); }; rad.appendChild(b); });
         boks.appendChild(rad);
         const h=el('div','do-valg'); const hb=el('button','do-knapp liten','🔊 Hør lyden'); hb.onclick=()=>Lyd.spill({bokstav:o.f}); h.appendChild(hb); boks.appendChild(h); },
-      forklar(boks){ forklarLyd(boks,o); } };
+      forklar(boks){ forklarLyd(boks,o,'f'); } };
+  },
+  siste(){
+    const o=pick(LYDORD.filter(x=>x.s && x.s!==x.f));
+    const valg=[o.s, ...shuffle(BOKSTAVER.filter(b=>b!==o.s && b!==o.f)).slice(0,2)];
+    return { tekst:`Hvilken lyd hører du <b>sist</b>?`, si:[k('hvilken-lyd-sist'), ordLyd(o)],
+      tegn(boks,svar){ boks.innerHTML=`<div class="do-midt">${imgFor(o.fil)}</div><div class="do-valg"><button class="do-knapp liten" data-hør>🔊 Hør ordet</button></div>`;
+        boks.querySelector('[data-hør]').onclick=()=>Lyd.spill(ordLyd(o));
+        valgknapper(boks,valg,o.s,svar,{stor:true}); },
+      forklar(boks){ forklarLyd(boks,o,'s'); } };
+  },
+  midt(){
+    const o=pick(LYDORD.filter(x=>x.m));
+    const valg=[o.m, ...shuffle(VOKALER.filter(b=>b!==o.m)).slice(0,2)];
+    return { tekst:`Hvilken lyd hører du <b>i midten</b>?`, si:[k('hvilken-lyd-midt'), ordLyd(o)],
+      tegn(boks,svar){ boks.innerHTML=`<div class="do-midt">${imgFor(o.fil)}</div><div class="do-valg"><button class="do-knapp liten" data-hør>🔊 Hør ordet</button></div>`;
+        boks.querySelector('[data-hør]').onclick=()=>Lyd.spill(ordLyd(o));
+        valgknapper(boks,valg,o.m,svar,{stor:true}); },
+      forklar(boks){ forklarLyd(boks,o,'m'); } };
+  },
+  fotspor(){ // hvor i ordet er lyden? (ord med tre lyder)
+    const o=pick(LYDORD.filter(x=>x.m && x.s && new Set([x.f,x.m,x.s]).size===3)), pos=pick(['f','m','s']), b=o[pos];
+    const idx={f:0,m:1,s:2}[pos];
+    return { tekst:`Hvor i ordet hører du lyden <b class="do-uthev">${b}</b>? Trykk på riktig fotspor.`, si:[k('hvor-i-ordet'), {bokstav:b}, {pause:300}, ordLyd(o)],
+      tegn(boks,svar){ boks.innerHTML=`<div class="do-midt">${imgFor(o.fil)}</div><div class="do-valg"><button class="do-knapp liten" data-hør>🔊 Hør ordet</button><button class="do-knapp liten" data-lyd>🔊 Hør lyden</button></div>`;
+        boks.querySelector('[data-hør]').onclick=()=>Lyd.spill(ordLyd(o)); boks.querySelector('[data-lyd]').onclick=()=>Lyd.spill({bokstav:b});
+        const rad=el('div','do-valg do-fotspor');
+        ['først','i midten','sist'].forEach((navn,i)=>{ const kn=el('button','do-fot-knapp',`<span class="do-fotavtrykk">🐾</span><small>${navn}</small>`);
+          kn.onclick=()=>{ rad.querySelectorAll('button').forEach(x=>x.disabled=true); kn.classList.add(i===idx?'rett':'feil'); svar(i===idx); }; rad.appendChild(kn); });
+        boks.appendChild(rad); },
+      forklar(boks){ boks.innerHTML=`<div class="do-forklar">${imgFor(o.fil)}<div><div class="do-fotspor vis">${[o.f,o.m,o.s].map((x,i)=>`<span class="${i===idx?'uthev':''}">${x}</span>`).join('')}</div>
+          <p>I <b>${o.ord}</b> hører du <b>${b}</b> ${['først','i midten','sist'][idx]}.</p></div></div>`;
+        Lyd.leggTil([ordLyd(o),{pause:300},{bokstav:o.f},{pause:200},{bokstav:o.m},{pause:200},{bokstav:o.s}]); } };
   },
 };
-function lagLyder(nivå,K){ return nivå===1 ? LYDER.første(1,K) : LYDER[pick(['første','kresen'])](2,K); }
+const LYDTYPER = { 1:['første'], 2:['første','kresen'], 3:['siste','siste','første'], 4:['midt','midt','siste'], 5:['fotspor','fotspor','midt'] };
+function lagLyder(nivå,K){ return LYDER[pick(LYDTYPER[nivå])](nivå,K); }
 
 /* ---------- LESE ORD (Skiltstien): ord med én og to stavelser ----------
    Ordet leses IKKE opp før eleven har svart – det er lesing, ikke lytting.
@@ -538,7 +721,38 @@ const LES = {
       forklar(boks){ forklarLes(boks,o,buer); } };
   },
 };
-function lagStavelser(nivå){ return LES[pick(['ordTilBilde','ordTilBilde','bildeTilOrd'])](nivå); }
+/* Nivå 4: hør ordet og finn riktig skilt. Nivå 5: små setninger (bilder og innlesing fra Myntlands Setningsverksted). */
+const SETNINGER = [
+  ['katten-sover-godt','Katten sover godt.'],['musa-spiser-osten','Musa spiser osten.'],['hunden-loeper-fort','Hunden løper fort.'],
+  ['flyet-flyr-hoeyt','Flyet flyr høyt.'],['bussen-stopper-her','Bussen stopper her.'],['frosken-hopper-langt','Frosken hopper langt.'],
+  ['loeven-broeler-hoeyt','Løven brøler høyt.'],['maanen-lyser-sterkt','Månen lyser sterkt.'],['hesten-spiser-gress','Hesten spiser gress.'],
+  ['fisken-svoemmer-stille','Fisken svømmer stille.'],['blomsten-lukter-godt','Blomsten lukter godt.'],['sola-skinner-varmt','Sola skinner varmt.'],
+  ['bilen-kjoerer-sakte','Bilen kjører sakte.'],['toget-kommer-snart','Toget kommer snart.'],['ugla-sitter-stille','Ugla sitter stille.'],
+  ['vi-spiser-eple','Vi spiser eple.'],['gutten-leser-boka','Gutten leser boka.'],['fuglen-sitter-i-treet','Fuglen sitter i treet.'],
+  ['hesten-spiser-et-eple','Hesten spiser et eple.'],['katten-sover-paa-stolen','Katten sover på stolen.'],['gutten-leser-om-store-dinosaurer','Gutten leser om store dinosaurer.'],
+].map(([fil,tekst])=>({fil,tekst,først:tekst.split(' ')[0]}));
+const setnBilde = s => `<img class="do-pic" src="bilder/setninger/setn-${s.fil}.webp" alt="" onerror="this.onerror=null;this.src='https://myntland.no/bilder/setninger/setn-${s.fil}.webp'">`;
+LES.hørOrd = function(){ // hør ordet → velg riktig skilt
+  const liste=[...ENSTAV,...TO_STAV], o=pick(liste), alle=[o,...lignende(o,liste,2)];
+  return { tekst:`Hør ordet. Hvilket skilt er det?`, si:[k('hoer-og-finn'), {pause:200}, {ord:o.fil,reserve:o.ord}],
+    tegn(boks,svar){ boks.innerHTML=`<div class="do-valg"><button class="do-knapp" data-hør>🔊 Hør ordet</button></div>`;
+      boks.querySelector('[data-hør]').onclick=()=>Lyd.spill({ord:o.fil,reserve:o.ord});
+      valgknapper(boks,alle,o,svar,{html:x=>skilt(x,false)}).classList.add('skilt'); },
+    forklar(boks){ forklarLes(boks,o,false); } };
+};
+LES.setning = function(){ // les setningen → velg bildet
+  const s=pick(SETNINGER), andre=shuffle(SETNINGER.filter(x=>x.først!==s.først)).slice(0,2), alle=shuffle([s,...andre]);
+  return { tekst:`Les setningen. Hvilket bilde passer?`, si:[k('les-setningen')],
+    tegn(boks,svar){ boks.innerHTML=`<div class="do-midt"><div class="do-skilt do-setning"><span>${visOrd(s.tekst)}</span></div></div>`;
+      const rad=el('div','do-valg bilder');
+      alle.forEach(x=>{ const b=el('button','do-knapp bildeknapp',setnBilde(x)); b.onclick=()=>{ rad.querySelectorAll('button').forEach(y=>y.disabled=true); b.classList.add(x===s?'rett':'feil'); svar(x===s); }; rad.appendChild(b); });
+      boks.appendChild(rad); },
+    forklar(boks){ boks.innerHTML=`<div class="do-forklar">${setnBilde(s)}<div><p class="do-lesord">${visOrd(s.tekst)}</p><button class="do-knapp liten" data-hør>🔊 Hør setningen</button></div></div>`;
+      const lyd={fil:`lyd/setn-${s.fil}.mp3`, reserve:s.tekst};
+      boks.querySelector('[data-hør]').onclick=()=>Lyd.spill([lyd]); Lyd.leggTil([lyd]); } };
+};
+const LESTYPER = { 1:['ordTilBilde','ordTilBilde','bildeTilOrd'], 2:['ordTilBilde','ordTilBilde','bildeTilOrd'], 3:['ordTilBilde','bildeTilOrd'], 4:['hørOrd','hørOrd','ordTilBilde'], 5:['setning','setning','hørOrd'] };
+function lagStavelser(nivå){ const t=pick(LESTYPER[nivå]); return LES[t](t==='ordTilBilde'||t==='bildeTilOrd' ? Math.min(nivå,3) : nivå); }
 
 const LAG = { klokke:lagKlokke, penger:lagPenger, tier:lagTier, lyder:lagLyder, stavelser:lagStavelser };
 
@@ -569,7 +783,7 @@ function open(id, {enc=1, onClose=null}={}){
   lagOverlay();
   const st=STASJONER.find(s=>s.id===id), L=lesLæring(), t=L.tema[id], K={...(KULISSE[enc]||KULISSE[1]), id:KULISSE[enc]?enc:1};
   const forfall=!!(t.rep && dayStr()>=t.rep.neste);
-  const nivå=Math.min(t.nivå,BYGDE_NIVÅ);
+  const nivå=Math.min(t.nivå,BYGDE[id]);
   // én oppgave fra et tidligere nivå når eleven er på nivå 2 eller høyere
   const nivåer=Array(LÆRING.rundeLengde).fill(nivå);
   if(nivå>1) nivåer[1+rnd(LÆRING.rundeLengde-1)]=1+rnd(nivå-1);
@@ -636,7 +850,7 @@ function registrer(nivå, ok){
   if(nivå===t.nivå && h.length>=LÆRING.mestringAv && h.reduce((a,b)=>a+b,0)>=LÆRING.mestringKrav && !t.mestret.includes(nivå)){
     t.mestret.push(nivå);
     R.nyStjerne=nivå;
-    if(t.nivå<BYGDE_NIVÅ) t.nivå++;
+    if(t.nivå<BYGDE[R.id]) t.nivå++;
     if(!t.rep) t.rep={ steg:0, neste:addDays(LÆRING.repetisjonDager[0]) };
   }
   lagreLæring(L);
@@ -654,7 +868,7 @@ function ferdig(){
   const n=R.ko.length;
   let stjerne='';
   if(R.nyStjerne){
-    stjerne = R.nyStjerne<BYGDE_NIVÅ
+    stjerne = R.nyStjerne<BYGDE[R.id]
       ? `<div class="do-stjerne">⭐ Ny stjerne! Du kan <b>${NIVÅNAVN[R.id][R.nyStjerne-1].toLowerCase()}</b>.<br>Neste gang får du nivå ${R.nyStjerne+1}: ${NIVÅNAVN[R.id][R.nyStjerne]}.</div>`
       : `<div class="do-stjerne">⭐ Ny stjerne! Du kan <b>${NIVÅNAVN[R.id][R.nyStjerne-1].toLowerCase()}</b>. Flere nivåer kommer snart!</div>`;
   }
@@ -696,9 +910,9 @@ function visVoksen(){
   let h='<table class="do-tabell"><tr><th>Stasjon</th><th>Nivå nå</th><th>Siste resultater</th><th>Repetisjon</th></tr>';
   for(const st of STASJONER){
     const t=L.tema[st.id];
-    const res=[1,2].map(n=>{ const a=t.hist[n]||[]; return `Nivå ${n}: ${a.length?`${a.reduce((x,y)=>x+y,0)}/${a.length}`:'–'}${t.mestret.includes(n)?' ⭐':''}`; }).join('<br>');
+    const res=Array.from({length:BYGDE[st.id]},(_,i)=>i+1).filter(n=>(t.hist[n]||[]).length||n<=t.nivå).map(n=>{ const a=t.hist[n]||[]; return `Nivå ${n}: ${a.length?`${a.reduce((x,y)=>x+y,0)}/${a.length}`:'–'}${t.mestret.includes(n)?' ⭐':''}`; }).join('<br>');
     h+=`<tr><td>${st.ikon} <b>${st.navn}</b><br><small>${st.tema}</small></td>
-      <td><select data-tema="${st.id}" class="do-input">${NIVÅNAVN[st.id].slice(0,BYGDE_NIVÅ).map((n,i)=>`<option value="${i+1}" ${t.nivå===i+1?'selected':''}>${i+1}: ${n}</option>`).join('')}</select></td>
+      <td><select data-tema="${st.id}" class="do-input">${NIVÅNAVN[st.id].slice(0,BYGDE[st.id]).map((n,i)=>`<option value="${i+1}" ${t.nivå===i+1?'selected':''}>${i+1}: ${n}</option>`).join('')}</select></td>
       <td>${res}<br><small>${t.runder} runder</small></td><td><small>${t.rep?`Neste: ${t.rep.neste}`:'Ikke mestret ennå'}</small></td></tr>`;
   }
   h+='</table>';
@@ -777,6 +991,26 @@ const css=`
 .do-skilt .do-bue{padding:0 6px 8px;border-bottom:6px solid #fff3cf;border-radius:0 0 50% 50%/0 0 22px 22px}
 .do-valg.skilt .do-knapp{padding:6px;background:#fffdf6}.do-valg.skilt .do-skilt{padding:8px 16px}.do-valg.skilt .do-skilt span{font-size:clamp(28px,4vw,40px)}
 .do-lesord{font-size:1.3em;letter-spacing:2px}
+.do-seddel{display:block}.do-valg.mynter .do-seddel,.do-lommebok .do-seddel{zoom:1.15}.do-myntrad.stor .do-seddel{zoom:1.2}
+.do-pil{font:700 40px Fredoka;margin:0 6px}
+.do-valg.hauger .haugknapp{padding:8px;max-width:340px}.do-valg.hauger .do-myntrad{min-height:0}
+.do-kolonne{display:flex;flex-direction:column;align-items:center;gap:6px}
+.do-solmerke{background:#fff3cf;border:2px solid #e0a21f;border-radius:999px;padding:2px 14px;font:600 18px Fredoka}
+.do-sorter{position:relative}.do-sortnr{position:absolute;top:6px;left:6px;width:38px;height:38px;border-radius:50%;background:#3f86c9;color:#fff;font:700 22px Fredoka;display:grid;place-items:center}
+.do-sortnr:empty{display:none}
+.do-eggrad{gap:14px}
+.do-tallegg{width:96px;height:120px;border-radius:50% 50% 50% 50%/60% 60% 40% 40%;border:3px solid #1f3b2c;background:radial-gradient(circle at 35% 30%,#fff,#f6ecd0 55%,#d9c79a);
+  font:700 40px Fredoka;color:#1f3b2c;cursor:pointer;box-shadow:0 5px 0 rgba(31,59,44,.2);touch-action:manipulation}
+.do-tallegg.valgt{outline:5px solid #f2a33a;outline-offset:2px}.do-tallegg.rett{background:#bfeac4}.do-tallegg.feil{background:#ffd9c2}
+.do-hundre{display:flex;gap:6px;background:#9a6a3e;padding:10px;border-radius:14px;border:3px solid #1f3b2c}
+.do-hundre i{width:26px;height:130px;border-radius:8px;background:#e9c46a;box-shadow:inset 0 3px 0 rgba(0,0,0,.12)}
+.do-hundre i.full{background:repeating-linear-gradient(#fff8e6 0 9px,#d9c79a 9px 13px);border:2px solid #1f3b2c}
+.do-fotspor{gap:14px}.do-fot-knapp{width:120px;height:120px;border:3px solid #1f3b2c;border-radius:24px;background:#fbf0de;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  box-shadow:0 5px 0 rgba(31,59,44,.2);font:600 18px Fredoka;color:#1f3b2c;touch-action:manipulation}
+.do-fotavtrykk{font-size:46px}.do-fot-knapp.rett{background:#bfeac4}.do-fot-knapp.feil{background:#ffd9c2}
+.do-fotspor.vis{display:flex}.do-fotspor.vis span{width:64px;height:64px;display:grid;place-items:center;border:3px solid #1f3b2c;border-radius:16px;font:700 32px Fredoka;background:#fff}
+.do-fotspor.vis span.uthev{background:#fff3cf;color:#c2453a}
+.do-setning span{font-size:clamp(26px,4vw,40px)!important;letter-spacing:1px!important}
 .do-fot{padding:10px 18px 16px;border-top:3px dashed #d8d2bd;display:flex;flex-direction:column;gap:6px;max-height:55%;overflow:auto}
 .do-fot:empty{display:none}
 .do-melding{font-size:22px;text-align:center}.do-melding.ok b{color:#1d7a35}.do-melding.bom b{color:#c2453a}
@@ -821,27 +1055,38 @@ const ROS = ['Riktig!','Kjempebra!','Supert!','Ja, sånn!','Du fikk det til!'];
    ['hvilken-lyd-forst','Hvilken lyd hører du først i'],['begynner-med','begynner med'],
    ['les-skiltet','Les ordet på skiltet. Hvilket bilde passer?'],['hvilket-skilt','Hvilket skilt passer til bildet? Les alle skiltene.'],
   ].forEach(([n,t])=>reg(g,n,t));
+  g=gruppe('Nye oppgavetekster (nivå 3–6)','Til de høyere nivåene: kvart over/på og ettermiddag, sedler og veksling, 100-venner, siste lyd og lyden i midten, og lesing av setninger.');
+  [['klokke-les-ettermiddag','Det er ettermiddag. Hvilken digital klokke viser det samme?'],['om-ettermiddagen','om ettermiddagen.'],
+   ['rekkefolge','Hva skjer først i dag? Trykk på klokkene i riktig rekkefølge. Den tidligste først.'],
+   ['seddel-50','femtilapp'],['seddel-100','hundrelapp'],['seddel-200','tohundrelapp'],['seddel-500','femhundrelapp'],
+   ['du-har-en','Du har en'],['hvor-mange','Hvor mange'],['flere-5','femkroner'],['flere-10','tikroner'],['flere-20','tjuekroner'],['flere-50','femtilapper'],['flere-100','hundrelapper'],
+   ['faar-du-vekslebua','får du for den i vekslebua?'],['hvilken-haug','Hvilken haug er like mye verdt som en'],
+   ['betal','Betal'],['faa-som-mulig','kroner med så få mynter og sedler som mulig.'],['du-betaler-med','Du betaler med en'],['hvor-mye-tilbake','Hvor mye får du tilbake?'],
+   ['hundre-1','Hundre.'],['hundre-2','To hundre.'],['hundre-3','Tre hundre.'],['hundre-4','Fire hundre.'],['hundre-5','Fem hundre.'],
+   ['hundre-og-1','Hundre og'],['hundre-og-2','To hundre og'],['hundre-og-3','Tre hundre og'],['hundre-og-4','Fire hundre og'],
+   ['finn-to-ti','Finn de to eggene som blir ti til sammen.'],['pluss-hva-blir-hundre','pluss hva blir hundre?'],
+   ['hvilken-lyd-sist','Hvilken lyd hører du sist i'],['hvilken-lyd-midt','Hvilken lyd hører du i midten av'],['slutter-med','slutter med'],['har-i-midten','har i midten'],
+   ['hvor-i-ordet','Hvor i ordet hører du lyden'],['hoer-og-finn','Hør ordet. Hvilket skilt er det?'],['les-setningen','Les setningen. Hvilket bilde passer?'],
+  ].forEach(([n,t])=>reg(g,n,t));
   g=gruppe('Ros og tilbakemelding','Spilles når eleven svarer, og når runden er ferdig. Glad og varm stemme.');
   ROS.forEach((t,i)=>reg(g,`ros-${i+1}`,t));
   [['ikke-helt','Ikke helt. Se her.'],['runden-ferdig','Runden er ferdig! Du fikk'],['mynter','mynter.'],['ny-stjerne','Og en ny stjerne!']].forEach(([n,t])=>reg(g,n,t));
   g=gruppe('Mynter','Brukes i «Kiosken trenger en …».');
   [[1,'enkrone'],[5,'femkrone'],[10,'tikrone'],[20,'tjuekrone']].forEach(([v,t])=>reg(g,`mynt-${v}`,t));
-  g=gruppe('Klokkeslett','Hele og halve timer fra åtte til tolv (nivå 1–2). Les dem som et svar: «Halv ni.»');
-  for(let h=8;h<=12;h++) reg(g,'tid-'+slug(klokkeOrd(h,0)),cap(klokkeOrd(h,0))+'.');
-  for(let h=8;h<=11;h++) reg(g,'tid-'+slug(klokkeOrd(h,30)),cap(klokkeOrd(h,30))+'.');
-  g=gruppe('Tall','Tallene 0–20 fins allerede fra Myntland (samme stemme). Bare 21–50 er nye. Tallene står skrevet som ord, så stemmen uttaler dem på norsk.');
+  g=gruppe('Klokkeslett','Alle hele, halve og kvarte timer. Les dem som et svar: «Halv ni.» De samme ordene brukes både om formiddagen og ettermiddagen.');
+  for(const m of [0,30,15,45]) for(let h=1;h<=12;h++){ const n='tid-'+slug(klokkeOrd(h,m)); if(!(n in KLIPP)) reg(g,n,cap(klokkeOrd(h,m))+'.'); }
+  g=gruppe('Tall','Tallene står skrevet som ord, så stemmen uttaler dem på norsk. 55–95 (i femmere) er nye – de brukes til kronebeløp på de høyere nivåene.');
   const EN=['null','en','to','tre','fire','fem','seks','sju','åtte','ni','ti','elleve','tolv','tretten','fjorten','femten','seksten','sytten','atten','nitten'];
-  const TI={20:'tjue',30:'tretti',40:'førti',50:'femti'};
+  const TI={20:'tjue',30:'tretti',40:'førti',50:'femti',60:'seksti',70:'sytti',80:'åtti',90:'nitti'};
   const tallOrd = n => n<20 ? EN[n] : TI[n-n%10] + (n%10 ? EN[n%10] : '');   // skrevet som ord, så ElevenLabs leser norsk
   for(let n=0;n<=50;n++) reg(g,`tall-${n}`,cap(tallOrd(n))+'.',`tall-${n}.mp3`);
-  g.fins = n => +n.slice(5)<=20;
+  for(let n=55;n<=95;n+=5) reg(g,`tall-${n}`,cap(tallOrd(n))+'.',`tall-${n}.mp3`);   // femmere til 95 (kronebeløp på høyere nivåer)
   for(const [id,Ku] of Object.entries(KULISSE)){
-    if(id!=='1') continue;   // bare innhegninger som har egen side (legg til flere her etter hvert)
     g=gruppe(`Innhegning ${id}: ${['','Triceratops-enga','Langhalsskogen','T-rex-kløfta','Raptorreiret','Flygeøgle-kuppelen','Stegosaurus-sumpen'][id]}`,'Setninger med dinoens navn og maten i innhegningen, og varene i kiosken.');
     reg(g,`e${id}-faar-mat`,`${cap(Ku.dino)} skal få mat`);
     reg(g,`e${id}-botta`,`Fôrbøtta tar ti ${Ku.mat}. Det er`);
     reg(g,`e${id}-kresen`,`${cap(Ku.dinoEn)} er kresen! Den vil bare spise ting som begynner med`);
-    Ku.kiosk.forEach(([v])=>reg(g,`vare-${slug(v)}`,v));
+    Ku.kiosk.forEach(([v])=>{ if(!(`vare-${slug(v)}` in KLIPP)) reg(g,`vare-${slug(v)}`,v); });   // varer som fins fra før, gjenbrukes
   }
   g=gruppe('Stavelser','Brukes når eleven har svart feil i Skiltstien: «ka – ke – kake». Les hver stavelse kort og tydelig, slik den høres ut inne i ordet.');
   [...new Set(TO_STAV.flatMap(o=>o.stav))].forEach(st=>reg(g,'stav-'+slug(st),st.toLowerCase()));

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flygeøgle-kuppelen – Dinoparken</title>
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#2f6b3a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --ink:#1f3b2c; --card:#fffdf6; --sky1:#cdeefa; }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;overflow:hidden;font-family:'Atkinson Hyperlegible',system-ui,sans-serif;color:var(--ink);
+    background:radial-gradient(ellipse at 50% 30%,#ffffff 0%,var(--sky1) 55%,#b9e2f2 100%)}
+  #scene{position:fixed;inset:0;display:block;width:100%;height:100%;touch-action:none}
+  .top{position:fixed;top:16px;left:16px;right:16px;display:flex;gap:10px;align-items:flex-start;z-index:5;pointer-events:none}
+  .top>*{pointer-events:auto}
+  .card{background:var(--card);border:3px solid var(--ink);border-radius:20px;box-shadow:0 6px 0 rgba(31,59,44,.18)}
+  .back{display:flex;align-items:center;gap:6px;padding:10px 16px;font:600 18px Fredoka,sans-serif;color:var(--ink);text-decoration:none;min-height:56px}
+  .title{padding:8px 16px;flex:1;min-width:0}
+  .title h1{font:700 clamp(22px,3.4vw,32px) Fredoka,sans-serif;margin:0;line-height:1.1}
+  .title p{margin:2px 0 0;font-size:15px}
+  .coins{display:flex;align-items:center;gap:8px;padding:8px 16px;font:700 26px Fredoka,sans-serif;min-height:56px}
+  .coins.pop{animation:pop .4s}@keyframes pop{50%{transform:scale(1.15)}}
+  .lock{width:44px;height:44px;border-radius:50%;font-size:18px;cursor:pointer;opacity:.55}
+  #labels{position:fixed;inset:0;pointer-events:none;z-index:4}
+  .st{position:absolute;left:0;top:0;transform:translate(-50%,-100%);display:flex;align-items:center;gap:8px;background:var(--card);
+    border:3px solid var(--ink);border-radius:18px;padding:5px 14px 5px 5px;font:600 18px Fredoka,sans-serif;color:var(--ink);white-space:nowrap;
+    pointer-events:auto;cursor:pointer;box-shadow:0 5px 0 rgba(31,59,44,.22);transition:scale .15s;touch-action:manipulation}
+  .st:hover{scale:1.08}
+  .st .ic{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:var(--c);font-size:24px;border:2px solid var(--ink)}
+  .st .tx small{display:block;font:400 13px 'Atkinson Hyperlegible',sans-serif;color:#4a6656}
+  .st .stars{color:#e0a21f;letter-spacing:1px}
+  .st.due{background:#fff3cf;animation:glow 1.6s ease-in-out infinite}
+  .st.due::after{content:'Trenger deg! ×2 🪙';position:absolute;left:50%;top:-14px;transform:translateX(-50%);background:#c2453a;color:#fff;font-size:12px;padding:2px 8px;border-radius:999px;border:2px solid var(--ink)}
+  @keyframes glow{0%,100%{box-shadow:0 5px 0 rgba(31,59,44,.22),0 0 0 0 rgba(242,163,58,.0)}50%{box-shadow:0 5px 0 rgba(31,59,44,.22),0 0 0 10px rgba(242,163,58,.45)}}
+  .hint{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:rgba(255,253,246,.95);border:2px solid var(--ink);
+    border-radius:999px;padding:8px 18px;font-size:16px;white-space:nowrap;z-index:5}
+  #loading{position:fixed;inset:0;display:grid;place-items:center;font:600 22px Fredoka,sans-serif;z-index:3}
+  @media (max-width:640px){ .st .tx small{display:none} .st{font-size:15px} .st .ic{width:36px;height:36px;font-size:20px} .title p{display:none} .hint{font-size:13px} }
+  @media (prefers-reduced-motion:reduce){ .st.due{animation:none} }
+</style>
+<script type="importmap">
+{"imports":{
+  "three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+}}
+</script>
+</head>
+<body>
+<div id="loading">Laster Flygeøgle-kuppelen …</div>
+<canvas id="scene" aria-label="Flygeøgle-kuppelen i 3D"></canvas>
+<div id="labels"></div>
+<div class="top">
+  <a class="card back" href="index.html" aria-label="Tilbake til parken">◀ Parken</a>
+  <div class="card title"><h1>Flygeøgle-kuppelen</h1><p>Se opp! Her flyr pteranodonene.</p></div>
+  <div class="card coins" id="coins" aria-label="Mynter"><svg width="30" height="30" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="11" fill="#f2c230" stroke="#1f3b2c" stroke-width="2.5"/><circle cx="13" cy="13" r="6.5" fill="none" stroke="#b8740f" stroke-width="2"/></svg><span id="coinN">0</span></div>
+  <button class="card lock" id="adult" aria-label="Voksenmeny">🔒</button>
+</div>
+<div class="hint">Trykk på en stasjon for å starte en runde</div>
+
+<script src="oppgaver.js"></script>
+<script type="module">
+/* Alt det felles (3D, stasjoner, dinoer) ligger i innhegning.js – her står bare det som er spesielt for Flygeøgle-kuppelen. */
+import { bygg } from './innhegning.js';
+bygg({ id:5, navn:'Flygeøgle-kuppelen', bakke:0x97d47c, gjerde:'tre', dino:'ptero', størrelse:[1,.9,.8], tema:'kuppel' });
+</script>
+</body>
+</html>
