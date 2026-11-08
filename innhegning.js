@@ -83,6 +83,51 @@ function clockTexture(){
   const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace; return t;
 }
 
+/* ---------- Porten: dobbel port med hengelås, i samme stil som gjerdet ---------- */
+/* A og B = endene av åpningen i gjerdet, f = gjerdestilen, stil = 'tre' | 'fare' | 'metall' */
+function lagPort(parent,A,B,f,stil,{stolper=true}={}){
+  const BX=new THREE.BoxGeometry(1,1,1), BUE=new THREE.TorusGeometry(1,.28,6,12,Math.PI);
+  const dx=B.x-A.x, dz=B.z-A.z, L=Math.hypot(dx,dz), ux=dx/L, uz=dz/L, yaw=Math.atan2(dx,dz);
+  const h=Math.max(1.2,f.h*.95), pr=stolper?f.r*1.9:.15;
+  if(stolper) for(const P of [A,B]){
+    add(parent,BX,f.post,P.x,(f.h+.35)/2,P.z,pr*2,f.h+.35,pr*2);
+    add(parent,BX,f.rail,P.x,f.h+.4,P.z,pr*2.4,.1,pr*2.4);
+  }
+  const w=L/2-pr-.04, leaves=[];
+  const skilt=(()=>{ const c=document.createElement('canvas'); c.width=256; c.height=128; const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace;
+    const tegn=()=>{ const x=c.getContext('2d'); x.fillStyle='#c2453a'; x.fillRect(0,0,256,128); x.lineWidth=10; x.strokeStyle='#fff7d6'; x.strokeRect(8,8,240,112);
+      x.fillStyle='#fff7d6'; x.font='700 64px Fredoka, sans-serif'; x.textAlign='center'; x.textBaseline='middle'; x.fillText('LÅST',128,68); t.needsUpdate=true; };
+    tegn(); document.fonts && document.fonts.ready.then(tegn); return t; })();
+  for(const s of [0,1]){
+    const g=new THREE.Group(), H=s?{x:B.x-ux*pr,z:B.z-uz*pr}:{x:A.x+ux*pr,z:A.z+uz*pr};
+    g.position.set(H.x,0,H.z); g.rotation.y=s?yaw+Math.PI:yaw; g.userData.base=g.rotation.y; parent.add(g); leaves.push(g);
+    // ramme: to stolper og tverrligger
+    add(g,BX,f.post,0,h/2+.05,.06,.12,h-.05,.12); add(g,BX,f.post,0,h/2+.05,w-.06,.12,h-.05,.12);
+    for(const y of [.2,h*.5,h-.02]) add(g,BX,f.rail,0,y,w/2,.09,.12,w);
+    if(stil==='tre'){ // skråstag, som en ekte grind
+      const d=Math.hypot(w-.12,h*.5-.2), sk=add(g,BX,f.rail,0,(h*.5+.2)/2,w/2,.08,.1,d); sk.rotation.x=-Math.atan2(h*.5-.2,w-.12);
+      for(let k=1;k<4;k++) add(g,BX,f.rail,0,h*.75,k*w/4,.07,h*.5,.08);
+    } else { // tette sprosser – fare-porten får gule og svarte
+      const n=Math.max(3,Math.round(w/.22));
+      for(let k=1;k<n;k++) add(g,BX,stil==='fare'?(k%2?0xf2c230:0x2b2b2b):f.rail,0,h/2+.05,k*w/n,.06,h-.1,.06);
+      if(stil==='fare') for(let k=0;k<4;k++){ const p=add(g,BX,0x2b2b2b,0,h+.12,.1+k*(w-.2)/3,.05,.25,.05); }
+    }
+    if(s===1){ // «LÅST»-skilt på begge sider
+      const sm=new THREE.MeshStandardMaterial({map:skilt,roughness:.6}), kant=M(0xfff7d6);
+      const sb=new THREE.Mesh(new THREE.BoxGeometry(.04,.34,.68),[sm,sm,kant,kant,kant,kant]); sb.position.set(0,h*.72,w/2); sb.castShadow=true; g.add(sb);
+    } else { // slå, kjetting og hengelås midt på
+      add(g,BX,0x4a4a4a,0,h*.5,w,.07,.08,.5);
+      const lock=new THREE.Group(); lock.position.set(0,h*.5-.05,w+.02); g.add(lock); g.userData.lock=lock;
+      for(const sx of [-1,1]){
+        add(lock,BX,0xe0a21f,sx*.1,-.16,0,.08,.22,.2);
+        const b=add(lock,BUE,0xb8c3cc,sx*.1,-.05,0,.07,.07,.07); b.rotation.y=Math.PI/2;
+        add(lock,BX,0x1f3b2c,sx*.145,-.18,0,.01,.06,.04,false);
+      }
+    }
+  }
+  return { leaves, center:{x:(A.x+B.x)/2,z:(A.z+B.z)/2}, h };
+}
+
 /* ---------- Landskap ---------- */
 const ISL=blob(19,17,40,.07,0,1,5);
 slab(ISL,-1.2,1.2,TEMA==='kløft'?0xb9a57a:0x7cc35a);
@@ -92,12 +137,16 @@ slab(ENC,0,.12,new THREE.MeshStandardMaterial({color:C.bakke,flatShading:true,ro
 const WALK=blob(10.5,8.5,16,.1,0,1,2+ENC_ID);
 /* Gjerde */
 const GJERDE={ tre:{post:0x8a5a3a,rail:0xc08a55,h:1.1,rails:[.45,.9],r:.11}, fare:{post:0x4a4a4a,rail:0xf2c230,h:2.0,rails:[.6,1.2,1.8],r:.13}, metall:{post:0x6e7b86,rail:0xb8c3cc,h:1.6,rails:[.5,1.0,1.45],r:.1} }[C.gjerde||'tre'];
-{ const P=ENC, n=P.length, gateI=Math.round(n*.2);
+let PORT;
+{ const P=ENC, n=P.length, gateI=Math.round(n*.2); let gapK=[], gapSegs=1;
   for(let i=0;i<n;i++){ const a=P[i],b=P[(i+1)%n], len=Math.hypot(b.x-a.x,b.z-a.z), segs=Math.max(1,Math.round(len/1.3)), yaw=Math.atan2(b.x-a.x,b.z-a.z);
     for(let k=0;k<segs;k++){ const t0=k/segs, tm=(k+.5)/segs;
-      if(i===gateI && Math.abs(tm-.5)<.35) continue;
+      if(i===gateI && Math.abs(tm-.5)<.35){ gapK.push(k); gapSegs=segs; continue; }
       add(scene,G.cyl,GJERDE.post,a.x+(b.x-a.x)*t0,GJERDE.h/2,a.z+(b.z-a.z)*t0,GJERDE.r,GJERDE.h,GJERDE.r);
-      for(const ry of GJERDE.rails){ const r=add(scene,G.box,GJERDE.rail,a.x+(b.x-a.x)*tm,ry,a.z+(b.z-a.z)*tm,.07,.09,len/segs+.02); r.rotation.y=yaw; } } } }
+      for(const ry of GJERDE.rails){ const r=add(scene,G.box,GJERDE.rail,a.x+(b.x-a.x)*tm,ry,a.z+(b.z-a.z)*tm,.07,.09,len/segs+.02); r.rotation.y=yaw; } } }
+  /* Porten settes i åpningen, så dinosaurene ikke slipper ut */
+  const a=P[gateI], b=P[(gateI+1)%n], tA=Math.min(...gapK)/gapSegs, tB=(Math.max(...gapK)+1)/gapSegs;
+  PORT=lagPort(scene,{x:a.x+(b.x-a.x)*tA,z:a.z+(b.z-a.z)*tA},{x:a.x+(b.x-a.x)*tB,z:a.z+(b.z-a.z)*tB},GJERDE,C.gjerde||'tre'); }
 /* Planter og steiner */
 function pine(x,z,s=1){ const g=new THREE.Group(); g.position.set(x,0,z); g.rotation.y=R(0,6); scene.add(g);
   add(g,G.cyl,0x7a4a2a,0,.5*s,0,.18*s,s,.18*s); for(let i=0;i<3;i++){ const r=(1.1-i*.28)*s; add(g,G.cone,0x4f9a4a,0,(1.2+i*.75)*s,0,r,1.3*s,r); } }
@@ -156,7 +205,7 @@ const FÔR = { eng:[0x4f9a4a,'blad'], skog:[0x3f8a3a,'blad'], sump:[0x6a9a3a,'bl
   for(let i=0;i<3;i++){ const x=-1.6+i*1.6; add(g,G.cyl,0x7a4a2a,x,.8,-.7,.08,1.6,.08); const b=add(g,G.box,cols[i],x,1.5,-.7,1.1,.5,.08); b.rotation.z=(i-1)*.08; } }
 
 /* ---------- Pynt etter tema ---------- */
-const PONDS=[];
+const PONDS=[[PORT.center.x,PORT.center.z,2.4]];   // første «plass» holdes fri foran porten
 const near=(x,z,r)=>Object.values(STATION_POS).some(p=>Math.hypot(p.x-x,p.z-z)<r) || PONDS.some(p=>Math.hypot(x-p[0],z-p[1])<p[2]);
 if(TEMA==='eng'){ pond(-4.5,4.2,2.6,1.8,1); PONDS.push([-4.5,4.2,3.6]); }
 if(TEMA==='skog'){ pond(-4.5,3.8,2.2,1.5,2); PONDS.push([-4.5,3.8,3.2]); }
@@ -307,6 +356,35 @@ for(const st of DinoOppgaver.STASJONER){
   b.onclick=()=>DinoOppgaver.open(st.id,{enc:ENC_ID,onClose:()=>{ refreshLabels(); spawnDinos(); window.DinoParkHUD(); }});
   labels.appendChild(b); tags[st.id]=b;
 }
+/* Port-knappen: barna kan sjekke at porten er låst */
+let portRist=0;
+{ const b=document.createElement('button'); b.className='st'; b.style.setProperty('--c','#f6ecd0');
+  b.innerHTML='<span class="ic">🔒</span><span class="tx">Porten <small>Trykk for å sjekke</small></span>';
+  b.setAttribute('aria-label','Porten: trykk for å sjekke at den er låst');
+  b.onclick=()=>{ portRist=1; portLyd(); portMelding(); };
+  labels.appendChild(b); tags.port=b; anchors.port=new THREE.Vector3(PORT.center.x,PORT.h+1.3,PORT.center.z); }
+let portTimer;
+function portMelding(){
+  let m=document.getElementById('portMelding');
+  if(!m){ m=document.createElement('div'); m.id='portMelding'; m.setAttribute('role','status');
+    m.style.cssText='position:fixed;left:50%;top:96px;transform:translateX(-50%);z-index:6;background:#fffdf6;border:3px solid #1f3b2c;border-radius:20px;padding:10px 20px;font:600 20px Fredoka,sans-serif;color:#1f3b2c;box-shadow:0 6px 0 rgba(31,59,44,.18);text-align:center;max-width:90vw;transition:opacity .3s';
+    document.body.appendChild(m); }
+  m.textContent='🔒 Porten er låst – dinosaurene er trygge inne!'; m.style.opacity='1';
+  clearTimeout(portTimer); portTimer=setTimeout(()=>m.style.opacity='0',2600);
+}
+let lydCtx;
+function portLyd(){ try{
+  lydCtx=lydCtx||new (window.AudioContext||window.webkitAudioContext)(); const t0=lydCtx.currentTime;
+  for(let i=0;i<4;i++){ const o=lydCtx.createOscillator(), g=lydCtx.createGain(); o.type='square'; o.frequency.value=320+i%2*90;
+    g.gain.setValueAtTime(.0001,t0+i*.11); g.gain.exponentialRampToValueAtTime(.08,t0+i*.11+.01); g.gain.exponentialRampToValueAtTime(.0001,t0+i*.11+.09);
+    o.connect(g).connect(lydCtx.destination); o.start(t0+i*.11); o.stop(t0+i*.11+.1); }
+}catch(e){} }
+function updatePort(dt,t){
+  if(portRist<=0) return; portRist=Math.max(0,portRist-dt*1.4);
+  const v=Math.sin(t*38)*.05*portRist, [g0,g1]=PORT.leaves;
+  g0.rotation.y=g0.userData.base+v; g1.rotation.y=g1.userData.base-v;
+  if(g0.userData.lock) g0.userData.lock.rotation.z=Math.sin(t*22)*.5*portRist;
+}
 function refreshLabels(){
   for(const st of DinoOppgaver.STASJONER){
     const s=DinoOppgaver.status(st.id), b=tags[st.id]; if(!b) continue;
@@ -331,6 +409,7 @@ renderer.setAnimationLoop(()=>{
   const dt=Math.min(clock.getDelta(),.05), t=clock.elapsedTime;
   for(const d of walkers) updateWalker(d,dt,t);
   for(const d of flyers) updateFlyer(d,dt,t);
+  updatePort(dt,t);
   controls.update(); renderer.render(scene,camera); placeLabels();
 });
 }

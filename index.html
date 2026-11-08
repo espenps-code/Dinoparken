@@ -681,6 +681,51 @@ const FENCES = {
 const hitBoxes = [];
 const hitMat = new THREE.MeshBasicMaterial({ transparent:true, opacity:0, depthWrite:false });
 
+/* ---------- Porten: dobbel port med hengelås, i samme stil som gjerdet ---------- */
+/* A og B = endene av åpningen i gjerdet, f = gjerdestilen, stil = 'tre' | 'fare' | 'metall' */
+function lagPort(parent,A,B,f,stil,{stolper=true}={}){
+  const BX=new THREE.BoxGeometry(1,1,1), BUE=new THREE.TorusGeometry(1,.28,6,12,Math.PI);
+  const dx=B.x-A.x, dz=B.z-A.z, L=Math.hypot(dx,dz), ux=dx/L, uz=dz/L, yaw=Math.atan2(dx,dz);
+  const h=Math.max(1.2,f.h*.95), pr=stolper?f.r*1.9:.15;
+  if(stolper) for(const P of [A,B]){
+    add(parent,BX,f.post,P.x,(f.h+.35)/2,P.z,pr*2,f.h+.35,pr*2);
+    add(parent,BX,f.rail,P.x,f.h+.4,P.z,pr*2.4,.1,pr*2.4);
+  }
+  const w=L/2-pr-.04, leaves=[];
+  const skilt=(()=>{ const c=document.createElement('canvas'); c.width=256; c.height=128; const t=new THREE.CanvasTexture(c); t.colorSpace=THREE.SRGBColorSpace;
+    const tegn=()=>{ const x=c.getContext('2d'); x.fillStyle='#c2453a'; x.fillRect(0,0,256,128); x.lineWidth=10; x.strokeStyle='#fff7d6'; x.strokeRect(8,8,240,112);
+      x.fillStyle='#fff7d6'; x.font='700 64px Fredoka, sans-serif'; x.textAlign='center'; x.textBaseline='middle'; x.fillText('LÅST',128,68); t.needsUpdate=true; };
+    tegn(); document.fonts && document.fonts.ready.then(tegn); return t; })();
+  for(const s of [0,1]){
+    const g=new THREE.Group(), H=s?{x:B.x-ux*pr,z:B.z-uz*pr}:{x:A.x+ux*pr,z:A.z+uz*pr};
+    g.position.set(H.x,0,H.z); g.rotation.y=s?yaw+Math.PI:yaw; g.userData.base=g.rotation.y; parent.add(g); leaves.push(g);
+    // ramme: to stolper og tverrligger
+    add(g,BX,f.post,0,h/2+.05,.06,.12,h-.05,.12); add(g,BX,f.post,0,h/2+.05,w-.06,.12,h-.05,.12);
+    for(const y of [.2,h*.5,h-.02]) add(g,BX,f.rail,0,y,w/2,.09,.12,w);
+    if(stil==='tre'){ // skråstag, som en ekte grind
+      const d=Math.hypot(w-.12,h*.5-.2), sk=add(g,BX,f.rail,0,(h*.5+.2)/2,w/2,.08,.1,d); sk.rotation.x=-Math.atan2(h*.5-.2,w-.12);
+      for(let k=1;k<4;k++) add(g,BX,f.rail,0,h*.75,k*w/4,.07,h*.5,.08);
+    } else { // tette sprosser – fare-porten får gule og svarte
+      const n=Math.max(3,Math.round(w/.22));
+      for(let k=1;k<n;k++) add(g,BX,stil==='fare'?(k%2?0xf2c230:0x2b2b2b):f.rail,0,h/2+.05,k*w/n,.06,h-.1,.06);
+      if(stil==='fare') for(let k=0;k<4;k++){ const p=add(g,BX,0x2b2b2b,0,h+.12,.1+k*(w-.2)/3,.05,.25,.05); }
+    }
+    if(s===1){ // «LÅST»-skilt på begge sider
+      const sm=new THREE.MeshStandardMaterial({map:skilt,roughness:.6}), kant=M(0xfff7d6);
+      const sb=new THREE.Mesh(new THREE.BoxGeometry(.04,.34,.68),[sm,sm,kant,kant,kant,kant]); sb.position.set(0,h*.72,w/2); sb.castShadow=true; g.add(sb);
+    } else { // slå, kjetting og hengelås midt på
+      add(g,BX,0x4a4a4a,0,h*.5,w,.07,.08,.5);
+      const lock=new THREE.Group(); lock.position.set(0,h*.5-.05,w+.02); g.add(lock); g.userData.lock=lock;
+      for(const sx of [-1,1]){
+        add(lock,BX,0xe0a21f,sx*.1,-.16,0,.08,.22,.2);
+        const b=add(lock,BUE,0xb8c3cc,sx*.1,-.05,0,.07,.07,.07); b.rotation.y=Math.PI/2;
+        add(lock,BX,0x1f3b2c,sx*.145,-.18,0,.01,.06,.04,false);
+      }
+    }
+  }
+  return { leaves, center:{x:(A.x+B.x)/2,z:(A.z+B.z)/2}, h };
+}
+
 function buildFence(e,par){
   const f=FENCES[e.fence], P=e.poly, n=P.length;
   for(let i=0;i<n;i++){
@@ -697,6 +742,9 @@ function buildFence(e,par){
     }
   }
   for(const sd of [-1,1]) add(par,G.box,f.post,e.gate.x+e.edgeDir.x*1.5*sd,f.h/2+.15,e.gate.z+e.edgeDir.z*1.5*sd,.3,f.h+.3,.3);
+  /* Lukket port med hengelås i åpningen */
+  const gx=e.gate.x, gz=e.gate.z, ex=e.edgeDir.x*1.5, ez=e.edgeDir.z*1.5;
+  e.port=lagPort(par,{x:gx-ex,z:gz-ez},{x:gx+ex,z:gz+ez},f,{wood:'tre',danger:'fare',metal:'metall'}[e.fence],{stolper:false});
 }
 function buildSign(e,par){
   const sx=e.gate.x+e.out.x*1.0+e.edgeDir.x*2.4, sz=e.gate.z+e.out.z*1.0+e.edgeDir.z*2.4;
