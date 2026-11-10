@@ -495,6 +495,16 @@ const PENGER = {
         boks.querySelector('[data-ok]').onclick=()=>{ if(!lagt.length) return; boks.querySelectorAll('button').forEach(x=>x.disabled=true);
           svar(sum(lagt)===p && (!fåsteMulig || lagt.length===færrest(p).length)); };
       },
+      etterRiktig(boks){ // riktig beløp, men med flere biter enn nødvendig → vis en vennlig hint (gir fortsatt full uttelling)
+        const f=færrest(p);
+        if(fåsteMulig || lagt.length<=f.length) return null;
+        const ord = f.some(v=>v>=50) || lagt.some(v=>v>=50) ? 'mynter og sedler' : 'mynter';
+        boks.innerHTML=`<div class="do-forklar"><div><p>💡 Visste du at det går med <b>færre ${ord}</b>?</p>
+          <div class="do-myntrad">${f.map(penge).join('')}</div>
+          <p>${f.join(' + ')} = <b>${p} kr</b> – bare <b>${f.length}</b> i stedet for ${lagt.length}.</p>
+          <p class="do-tips">Ta den største først.</p></div></div>`;
+        return [k('faerre-tips')];
+      },
       forklar(boks){ forklarSum(boks,lagt,p);
         const f=færrest(p);
         boks.insertAdjacentHTML('beforeend', fåsteMulig && sum(lagt)===p
@@ -824,7 +834,9 @@ function svar(ok){
     gimynter(n);
     const ros=pick(ROS);
     fot.innerHTML=`<div class="do-melding ok"><b>${ros}</b> <span class="do-mynttekst">+${n} 🪙</span></div><button class="do-knapp go" id="doNeste">Neste ▶</button>`;
-    Lyd.spill([k(`ros-${ROS.indexOf(ros)+1}`)]);
+    let ekstraLyd=null;
+    if(o.etterRiktig){ const tips=el('div','do-forklarboks'); ekstraLyd=o.etterRiktig(tips); if(ekstraLyd) fot.insertBefore(tips, $d('doNeste')); }
+    Lyd.spill([k(`ros-${ROS.indexOf(ros)+1}`), ...(ekstraLyd||[])]);
     $d('doNeste').onclick=neste;
     if(window.DinoParkHUD) window.DinoParkHUD();
   } else if(R.forsøk===1){
@@ -1070,7 +1082,7 @@ const ROS = ['Riktig!','Kjempebra!','Supert!','Ja, sånn!','Du fikk det til!'];
   ].forEach(([n,t])=>reg(g,n,t));
   g=gruppe('Ros og tilbakemelding','Spilles når eleven svarer, og når runden er ferdig. Glad og varm stemme.');
   ROS.forEach((t,i)=>reg(g,`ros-${i+1}`,t));
-  [['ikke-helt','Ikke helt. Se her.'],['runden-ferdig','Runden er ferdig! Du fikk'],['mynter','mynter.'],['ny-stjerne','Og en ny stjerne!']].forEach(([n,t])=>reg(g,n,t));
+  [['ikke-helt','Ikke helt. Se her.'],['faerre-tips','Visste du at det går med færre? Se her.'],['runden-ferdig','Runden er ferdig! Du fikk'],['mynter','mynter.'],['ny-stjerne','Og en ny stjerne!']].forEach(([n,t])=>reg(g,n,t));
   g=gruppe('Mynter','Brukes i «Kiosken trenger en …».');
   [[1,'enkrone'],[5,'femkrone'],[10,'tikrone'],[20,'tjuekrone']].forEach(([v,t])=>reg(g,`mynt-${v}`,t));
   g=gruppe('Klokkeslett','Alle hele, halve og kvarte timer. Les dem som et svar: «Halv ni.» De samme ordene brukes både om formiddagen og ettermiddagen.');
